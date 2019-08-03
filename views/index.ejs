@@ -100,6 +100,7 @@
 		<% } %>
             		<a class="btn btn-primary" onclick="editJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit</a>
 					<a class="btn btn-danger" onclick="deleteJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
+					<a class="btn btn-info" onclick="hookJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-share" aria-hidden="true"></span></a>
 				</td>
 			</tr>
 	<% }); %>

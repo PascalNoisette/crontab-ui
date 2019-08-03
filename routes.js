@@ -2,6 +2,7 @@ exports.routes = {
 	"root" : "/",
 	"save" : "/save",
 	"run" : "/runjob",
+	"hook" : "/hook",
 	"crontab" : "/crontab",
 	"stop" : "/stop",
 	"start" : "/start",

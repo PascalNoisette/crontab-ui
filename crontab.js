@@ -109,6 +109,17 @@ exports.runjob = function(_id) {
 		});
 	});
 };
+exports.runhook = function(_id, env) {
+    db.find({_id: _id}).exec(function(err, docs){
+        var res = docs[0];
+        if (res != "undefined") {
+            exec(env + " " + res.command, function (error, stdout, stderr) {
+                console.error(stdout);
+                console.error(stderr);
+            });
+        }
+    });
+};
 
 make_command = function(tab) {
 	var crontab_job_string = "";
