@@ -12,7 +12,8 @@ RUN   apk --no-cache add \
       wget \
       curl \
       nodejs \
-      supervisor
+      supervisor \
+      git
 
 COPY supervisord.conf /etc/supervisord.conf
 COPY . /crontab-ui

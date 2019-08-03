@@ -16,7 +16,10 @@
     "mime-types": "latest",
     "moment": "latest",
     "nedb": "latest",
-    "nodemailer": "latest"
+    "nodemailer": "latest",
+    "consolidate": "latest",
+    "nedb-session-store": "latest",
+    "node-login":"git+https://github.com/braitsch/node-login.git"
   },
   "engines": {
     "node": "latest"

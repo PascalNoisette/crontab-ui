@@ -11,28 +11,13 @@ var mime = require('mime-types');
 var fs = require('fs');
 var busboy = require('connect-busboy'); // for file upload
 
-// basic auth
-var BASIC_AUTH_USER = process.env.BASIC_AUTH_USER;
-var BASIC_AUTH_PWD = process.env.BASIC_AUTH_PWD;
-
-if (BASIC_AUTH_USER && BASIC_AUTH_PWD) {
-    app.use(function(req, res, next) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"')
-        next();
-    });
-
-	app.use(basicAuth({
-        users: {
-            [BASIC_AUTH_USER]: BASIC_AUTH_PWD
-        }
-    }))
-}
 
 // include the routes
 var routes = require("./routes").routes;
 
-// set the view engine to ejs
-app.set('view engine', 'ejs');
+var engines = require('consolidate');
+app.engine('ejs', engines.ejs);
+app.engine('pug', engines.pug);
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.json());       // to support JSON-encoded bodies
@@ -46,7 +31,16 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/public/css'));
 app.use(express.static(__dirname + '/public/js'));
 app.use(express.static(__dirname + '/config'));
-app.set('views', __dirname + '/views');
+app.use(express.static(__dirname + "/node_modules/node-login/app/public"));
+app.use(express.static(__dirname + "/node_modules/node-login/app/public/js"));
+app.use(express.static(__dirname + "/node_modules/node-login/app/public/css"));
+app.set('views', [__dirname + '/views', __dirname + "/node_modules/node-login/app/server/views"]);
+
+
+
+var addLoginSupport = require('./login');
+addLoginSupport(app);
+
 
 // set host to 127.0.0.1 or the value set by environment var HOST
 app.set('host', (process.env.HOST || '127.0.0.1'));
@@ -60,7 +54,7 @@ app.get(routes.root, function(req, res) {
 	crontab.reload_db();
 	// send all the required parameters
 	crontab.crontabs( function(docs){
-		res.render('index', {
+		res.render('index.ejs', {
 			routes : JSON.stringify(routes),
 			crontabs : JSON.stringify(docs),
 			backups : crontab.get_backup_names(),

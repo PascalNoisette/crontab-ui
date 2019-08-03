@@ -1,0 +1,18 @@
+extends ../node_modules/node-login/app/server/views/layout
+
+block content
+	nav.navbar.navbar-expand.navbar-light.bg-light
+		.nav-item
+			a(href=routes.root class=".navbar-brand") Crontab UI
+		.navbar-nav.ml-auto
+			.nav-item
+				button.btn.navbar-btn.btn-outline-dark#btn-logout Sign Out
+
+	include ../node_modules/node-login/app/server/views/account
+	include ../node_modules/node-login/app/server/views/modals/alert
+	include ../node_modules/node-login/app/server/views/modals/confirm
+
+block scripts
+	script(src='/js/views/home.js')
+	script(src='/js/controllers/homeController.js')
+	script(src='/js/form-validators/accountValidator.js')

@@ -14,4 +14,9 @@ exports.routes = {
 	"import": "/import", // this is import from database
 	"import_crontab": "/import_crontab", // this is from existing crontab
 	"logger": "/logger",
+	"login": "/login",
+	"logout": "/logout",
+	"home": "/home",
+    "signup": "/signup",
+    "lost":"/lost-password",
 };
