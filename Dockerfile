@@ -1,5 +1,5 @@
 # docker run -d -p 8000:8000 alseambusher/crontab-ui
-FROM alpine:3.10
+FROM alpine
 
 ENV   CRON_PATH /etc/crontabs
 
@@ -17,10 +17,13 @@ RUN   apk --no-cache add \
       npm \
       supervisor
 
-COPY supervisord.conf /etc/supervisord.conf
-COPY . /crontab-ui
+COPY ./package.json ./package-lock.json /crontab-ui/
 
 RUN   npm install
+
+COPY supervisord.conf /etc/supervisord.conf
+
+COPY . /crontab-ui
 
 ENV   HOST 0.0.0.0
 
