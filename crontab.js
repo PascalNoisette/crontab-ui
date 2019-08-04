@@ -20,8 +20,8 @@ if(process.env.CRON_PATH !== undefined) {
 db.loadDatabase(function (err) {
 	if (err) throw err; // no hope, just terminate
 });
-
-var exec = require('child_process').exec;
+var childProcess = require('child_process');
+var exec = childProcess.exec;
 var fs = require('fs');
 var cron_parser = require("cron-parser");
 
@@ -87,26 +87,12 @@ exports.get_crontab = function(_id, callback) {
 	});
 };
 
-exports.runjob = function(_id) {
+exports.runjob = function(_id, callback) {
 	db.find({_id: _id}).exec(function(err, docs){
-		let res = docs[0];
-
-		let env_vars = exports.get_env()
-
-		let crontab_job_string_command = make_command(res)
-
-		crontab_job_string_command = add_env_vars(env_vars, crontab_job_string_command)
-
-		console.log("Running job")
-		console.log("ID: " + _id)		
-		console.log("Original command: " + res.command)
-		console.log("Executed command: " + crontab_job_string_command)
-
-		exec(crontab_job_string_command, function(error, stdout, stderr){
-			if (error) {
-				console.log(error)
-			}
-		});
+        var res = docs[0];
+        var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
+        var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
+        childProcess.spawn('sh', ['-c', res.command], {stdio: ['ignore', output, output2]});
 	});
 };
 exports.runhook = function(_id, env) {
