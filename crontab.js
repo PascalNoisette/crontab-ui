@@ -32,7 +32,7 @@ crontab = function(name, command, schedule, stopped, logging, mailing){
 	data.command = command;
 	data.schedule = schedule;
 	if(stopped !== null) {
-		data.stopped = stopped;
+		data.stopped = JSON.parse(stopped);
 	}
 	data.timestamp = (new Date()).toString();
 	data.logging = logging;
@@ -42,15 +42,15 @@ crontab = function(name, command, schedule, stopped, logging, mailing){
 	return data;
 };
 
-exports.create_new = function(name, command, schedule, logging, mailing){
-	var tab = crontab(name, command, schedule, false, logging, mailing);
+exports.create_new = function(name, command, schedule, logging, mailing, stopped){
+	var tab = crontab(name, command, schedule, stopped, logging, mailing);
 	tab.created = new Date().valueOf();
 	tab.saved = false;
 	db.insert(tab);
 };
 
 exports.update = function(data){
-	var tab = crontab(data.name, data.command, data.schedule, null, data.logging, data.mailing);
+	var tab = crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing);
 	tab.saved = false;
 	db.update({_id: data._id}, tab);
 };
