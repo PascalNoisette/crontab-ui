@@ -99,10 +99,9 @@ exports.runhook = function(_id, env) {
     db.find({_id: _id}).exec(function(err, docs){
         var res = docs[0];
         if (res != "undefined") {
-            exec(env + " " + res.command, function (error, stdout, stderr) {
-                console.error(stdout);
-                console.error(stderr);
-            });
+            var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
+            var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
+            childProcess.spawn('sh', ['-c', res.command], {stdio: ['ignore', output, output2], env: env});
         }
     });
 };
