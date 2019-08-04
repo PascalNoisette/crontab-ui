@@ -130,11 +130,11 @@ const flattenObject = (obj, prefix = '') =>
 
 // run a job by http request
 app.all(routes.hook, function(req, res) {
-	var env = [req.query, flattenObject(req.body)].reduce(function (y,z) {
-        return y + Object.keys(z).reduce(function (a, b) {
-            return a += " " + b.toUpperCase().replace(/[^A-Z0-9_]/g,"") + "='" + z[b].replace(/'/g, "'\\''")+"'";
-        }, "");
-    }, "");
+	var env = [process.env, req.query, flattenObject(req.body)].reduce(function (env, current) {
+		if (typeof(current) != "undefined")
+        	Object.assign(env, current)
+		return env;
+    }, {});
     crontab.runhook(req.query.id, env);
     res.end();
 });
