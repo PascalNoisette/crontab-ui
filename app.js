@@ -30,6 +30,14 @@ if (BASIC_AUTH_USER && BASIC_AUTH_PWD) {
 
 // include the routes
 var routes = require("./routes").routes;
+var js_routes = {};
+for (var key in routes) {
+	var js_route = routes[key];
+	if (/^\/./.test(js_route)) {
+		js_route = js_route.replace(/^\//, '');
+	}
+	js_routes[key] = js_route;
+}
 
 // set the view engine to ejs
 app.set('view engine', 'ejs');
@@ -43,7 +51,6 @@ app.use(busboy()); // to support file uploads
 
 // include all folders
 app.use(express.static(__dirname + '/public'));
-app.use(express.static(__dirname + '/public/css'));
 app.use(express.static(__dirname + '/public/js'));
 app.use(express.static(__dirname + '/config'));
 app.set('views', __dirname + '/views');
@@ -61,7 +68,7 @@ app.get(routes.root, function(req, res) {
 	// send all the required parameters
 	crontab.crontabs( function(docs){
 		res.render('index', {
-			routes : JSON.stringify(routes),
+			routes : JSON.stringify(js_routes),
 			crontabs : JSON.stringify(docs),
 			backups : crontab.get_backup_names(),
 			env : crontab.get_env(),
@@ -130,7 +137,7 @@ app.get(routes.restore, function(req, res) {
 	// get all the crontabs
 	restore.crontabs(req.query.db, function(docs){
 		res.render('restore', {
-			routes : JSON.stringify(routes),
+			routes : JSON.stringify(js_routes),
 			crontabs : JSON.stringify(docs),
 			backups : crontab.get_backup_names(),
 			db: req.query.db
