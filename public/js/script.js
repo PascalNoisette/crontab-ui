@@ -39,6 +39,11 @@ function deleteJob(_id){
 	});
 }
 
+function hookJob(_id){
+    var newClip = window.location + "hook/?id=" + _id;
+	messageBox('<p> Hook url : <a href="' + newClip + '">'+newClip+'</a></p>');
+}
+
 function stopJob(_id){
 	messageBox("<p> Do you want to stop this Job? </p>", "Confirm stop job", null, null, function(){
 		$.post(routes.stop, {_id: _id}, function(){
@@ -264,9 +269,6 @@ function setMailConfig(a){
 	});
 }
 
-function setHookConfig(a){
-	messageBox("<p>Coming Soon</p>", "Hooks", null, null, null);
-}
 
 // script corresponding to job popup management
 function job_string(){

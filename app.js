@@ -118,6 +118,26 @@ app.post(routes.run, function(req, res) {
 	res.end();
 });
 
+const flattenObject = (obj, prefix = '') =>
+    Object.keys(obj).reduce((acc, k) => {
+        const pre = prefix.length ? prefix + '_' : '';
+        if (obj[k] != null) {
+            if (typeof obj[k] === 'object') Object.assign(acc, flattenObject(obj[k], pre + k));
+            else acc[pre + k] = "" + obj[k];
+        }
+        return acc;
+    }, {});
+
+// run a job by http request
+app.all(routes.hook, function(req, res) {
+	var env = [req.query, flattenObject(req.body)].reduce(function (y,z) {
+        return y + Object.keys(z).reduce(function (a, b) {
+            return a += " " + b.toUpperCase().replace(/[^A-Z0-9_]/g,"") + "='" + z[b].replace(/'/g, "'\\''")+"'";
+        }, "");
+    }, "");
+    crontab.runhook(req.query.id, env);
+    res.end();
+});
 // set crontab. Needs env_vars to be passed
 app.get(routes.crontab, function(req, res, next) {
 	crontab.set_crontab(req.query.env_vars, function(err) {
