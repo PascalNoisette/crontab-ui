@@ -36,6 +36,38 @@
 	</div>
 
 	<br />
+      <div class="row">
+          <div class="col-md-4">
+          <label><input type="checkbox" id="job-docker" style="position:relative;top:2px" onclick="toggleRemote('job-docker-params', ['job-ssh']);"/> Dockerized</label><br />
+          </div>
+          <div class="col-md-4">
+              <label><input type="checkbox" id="job-ssh" style="position:relative;top:2px" onclick="toggleRemote('job-ssh-params', ['job-docker']);"/> Remotely with ssh</label><br />
+        </div>
+      </div>
+          <div class="bg-warning text-dark">
+      <div id="job-docker-params" class="collapse">
+          <label>Docker configuration</label>
+          <div class="row">
+              <div class="col-md-4">
+                  <label>Image</label>
+                  <input type='text' class='form-control' id="job-docker-image"/>
+             </div>
+          </div>
+      </div>
+      <div id="job-ssh-params" class="collapse">
+          <div class="row">
+              <div class="col-md-4">
+                  &nbsp;
+              </div>
+              <div class="col-md-4">
+                  <label>Ssh configuration</label>
+                  <br/>
+                  <label>Server</label>
+                  <input type='text' class='form-control' id='job-ssh-server'/>
+             </div>
+          </div>
+      </div>
+      </div>
 	<br />
 	<label>Job</label>
 	<input type='text' class='form-control' id='job-string' disabled='disabled'/><br />
