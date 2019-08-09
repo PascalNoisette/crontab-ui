@@ -269,6 +269,10 @@ function setMailConfig(a){
 	});
 }
 
+function toggleRemote(block, antagonists){
+    antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.toggle('collapse'); });
+    document.getElementById(block).classList.toggle('collapse');
+}
 
 // script corresponding to job popup management
 function job_string(){
