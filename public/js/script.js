@@ -256,7 +256,10 @@ function setMailConfig(a){
 		}
 	});
 }
-
+function toggleRemote(block, antagonists){
+    antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.toggle('collapse'); });
+    document.getElementById(block).classList.toggle('collapse');
+}
 function setHookConfig(a){
 	messageBox("<p>Coming Soon</p>", "Hooks", null, null, null);
 }
