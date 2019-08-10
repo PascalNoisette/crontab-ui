@@ -113,7 +113,7 @@ function editJob(_id){
 			$("#job-mailing").attr("data-json", JSON.stringify(job.mailing));
 		}
         if (job.remote) {
-            $("#job-remote").values(job.remote);
+            $("#job-remote").values({"job-remote":job.remote});
             $("#job-remote").find("input[type=checkbox]").each(function(f, e){if (e.checked) toggleRemote(e.id)});
         }
 		schedule = job.schedule;
@@ -136,7 +136,7 @@ function editJob(_id){
 		}
 		let name = $("#job-name").val();
 		let mailing = JSON.parse($("#job-mailing").attr("data-json"));
-		let remote = $("#job-remote").values();
+		let remote = $("#job-remote").values()["job-remote"];
 		let logging = $("#job-logging").prop("checked");
 		let stopped = $("#job-stopped").prop("checked");
 		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: _id, logging: logging, mailing: mailing, stopped : stopped, remote: remote}, function(){
@@ -167,7 +167,7 @@ function newJob(){
 		}
 		let name = $("#job-name").val();
 		let mailing = JSON.parse($("#job-mailing").attr("data-json"));
-		let remote = $("#job-remote").values();
+		let remote = $("#job-remote").values()["job-remote"];
 		let logging = $("#job-logging").prop("checked");
 		let stopped = $("#job-stopped").prop("checked");
 		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: -1, logging: logging, mailing: mailing, stopped: stopped, remote: remote}, function(){
@@ -206,6 +206,104 @@ function import_db(){
 	});
 }
 
+$.fn.serializeObject = function(){
+
+    var self = this,
+        json = {},
+        push_counters = {},
+        patterns = {
+            "validate": /^[a-zA-Z][a-zA-Z0-9_\-]*(?:\[(?:\d*|[a-zA-Z0-9_\-]+)\])*$/,
+            "key":      /[a-zA-Z0-9_\-]+|(?=\[\])/g,
+            "push":     /^$/,
+            "fixed":    /^\d+$/,
+            "named":    /^[a-zA-Z0-9_\-]+$/
+        };
+
+
+    this.build = function(base, key, value){
+        base[key] = value;
+        return base;
+    };
+
+    this.push_counter = function(key){
+        if(push_counters[key] === undefined){
+            push_counters[key] = 0;
+        }
+        return push_counters[key]++;
+    };
+
+    $.each($(this).serializeArray(), function(){
+
+        // skip invalid keys
+        if(!patterns.validate.test(this.name)){
+            return;
+        }
+
+        var k,
+            keys = this.name.match(patterns.key),
+            merge = this.value,
+            reverse_key = this.name;
+
+        while((k = keys.pop()) !== undefined){
+
+            // adjust reverse_key
+            reverse_key = reverse_key.replace(new RegExp("\\[" + k + "\\]$"), '');
+
+            // push
+            if(k.match(patterns.push)){
+                merge = self.build([], self.push_counter(reverse_key), merge);
+            }
+
+            // fixed
+            else if(k.match(patterns.fixed)){
+                merge = self.build([], k, merge);
+            }
+
+            // named
+            else if(k.match(patterns.named)){
+                merge = self.build({}, k, merge);
+            }
+        }
+
+        json = $.extend(true, json, merge);
+    });
+
+    return json;
+};
+
+flattenObject = function(ob) {
+    var toReturn = {};
+
+    for (var i in ob) {
+        if (!ob.hasOwnProperty(i)) continue;
+
+        if ((typeof ob[i]) == 'object' && ob[i] !== null) {
+            var flatObject = flattenObject(ob[i]);
+            for (var x in flatObject) {
+                if (!flatObject.hasOwnProperty(x)) continue;
+
+                toReturn[i + '][' + x] = flatObject[x];
+            }
+        } else {
+            toReturn[i] = ob[i];
+        }
+    }
+
+    return toReturn;
+}
+deserializeObject = function(ob) {
+    toReturn = flattenObject(ob);
+    for (i in toReturn) {
+        let key = i.replace(/\]/, "");
+        if (key != i) {
+            key += "]";
+            toReturn[key] = toReturn[i];
+            delete toReturn[i];
+        }
+    }
+    return toReturn;
+}
+
 /* jQuery.values: get or set all of the name/value pairs from child input controls
  * @argument data {array} If included, will populate all child controls.
  * @returns element if data was provided, or array of values if not
@@ -213,15 +311,15 @@ function import_db(){
 
 $.fn.values = function(data) {
     if(typeof data != 'object') {
-        return $(this).serializeArray();
+        return $(this).serializeObject();
     } else {
-        $.each(data, function() {
-            let input = document.getElementsByName(this.name)[0];
+		$.each(deserializeObject(data), function(name, value){
+            let input = document.getElementsByName(name)[0];
             if (input) {
                 if(input.type == 'checkbox' || input.type == 'radio') {
-                    $(input).attr("checked", this.value == $(input).val());
+                    $(input).attr("checked", value == $(input).val());
                 } else {
-                    $(input).val(this.value);
+                    $(input).val(value);
                 }
             }
         });
