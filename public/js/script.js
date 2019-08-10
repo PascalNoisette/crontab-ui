@@ -108,7 +108,7 @@ function editJob(_id){
 			$("#job-mailing").attr("data-json", JSON.stringify(job.mailing));
 		}
         if (job.remote) {
-            $("#job-remote").deserialize(job.remote);
+            $("#job-remote").values(job.remote);
             $("#job-remote").find("input[type=checkbox]").each(function(f, e){if (e.checked) toggleRemote(e.id)});
         }
 		schedule = job.schedule;
@@ -126,7 +126,7 @@ function editJob(_id){
 		}
 		let name = $("#job-name").val();
 		let mailing = JSON.parse($("#job-mailing").attr("data-json"));
-        let remote = $("#job-remote").serialize();
+		let remote = $("#job-remote").values();
 		let logging = $("#job-logging").prop("checked");
 		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: _id, logging: logging, mailing: mailing, remote: remote}, function(){
 			location.reload();
@@ -156,7 +156,7 @@ function newJob(){
 		}
 		let name = $("#job-name").val();
 		let mailing = JSON.parse($("#job-mailing").attr("data-json"));
-		let remote = $("#job-remote").serialize();
+		let remote = $("#job-remote").values();
 		let logging = $("#job-logging").prop("checked");
 		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: -1, logging: logging, mailing: mailing, remote: remote}, function(){
 			location.reload();
@@ -194,38 +194,28 @@ function import_db(){
 	});
 }
 
-$.fn.deserialize = function (serializedString)
-{
-    var $form = $(this);
-    $form[0].reset();    // (A) optional
-    serializedString = serializedString.replace(/\+/g, '%20'); // (B)
-    var formFieldArray = serializedString.split("&");
+/* jQuery.values: get or set all of the name/value pairs from child input controls
+ * @argument data {array} If included, will populate all child controls.
+ * @returns element if data was provided, or array of values if not
+*/
 
-    // Loop over all name-value pairs
-    $.each(formFieldArray, function(i, pair){
-        var nameValue = pair.split("=");
-        var name = decodeURIComponent(nameValue[0]); // (C)
-        var value = decodeURIComponent(nameValue[1]);
-        // Find one or more fields
-        var $field = $form.find('[name=\"' + name + '"]');
-
-        // Checkboxes and Radio types need to be handled differently
-        if ($field[0].type == "radio" || $field[0].type == "checkbox")
-        {
-            var $fieldWithValue = $field.filter('[value="' + value + '"]');
-            var isFound = ($fieldWithValue.length > 0);
-            // Special case if the value is not defined; value will be "on"
-            if (!isFound && value == "on") {
-                $field.first().prop("checked", true);
-            } else {
-                $fieldWithValue.prop("checked", isFound);
+$.fn.values = function(data) {
+    if(typeof data != 'object') {
+        return $(this).serializeArray();
+    } else {
+        $.each(data, function() {
+            let input = document.getElementsByName(this.name)[0];
+            if (input) {
+                if(input.type == 'checkbox' || input.type == 'radio') {
+                    $(input).attr("checked", this.value == $(input).val());
+                } else {
+                    $(input).val(this.value);
+                }
             }
-        } else { // input, textarea
-            $field.val(value);
-        }
-    });
-    return this;
-}
+        });
+        return $(this);
+    }
+};
 function setMailConfig(a){
 	let data = JSON.parse(a.getAttribute("data-json"));
 	let container = document.createElement("div");
