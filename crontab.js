@@ -26,7 +26,7 @@ var fs = require('fs');
 var cron_parser = require("cron-parser");
 
 
-crontab = function(name, command, schedule, stopped, logging, mailing){
+crontab = function(name, command, schedule, stopped, logging, mailing, remote){
 	var data = {};
 	data.name = name;
 	data.command = command;
@@ -39,18 +39,21 @@ crontab = function(name, command, schedule, stopped, logging, mailing){
 	if (!mailing)
 		mailing = {};
 	data.mailing = mailing;
+    if (!remote)
+        remote = {};
+    data.remote = remote;
 	return data;
 };
 
-exports.create_new = function(name, command, schedule, logging, mailing, stopped){
-	var tab = crontab(name, command, schedule, stopped, logging, mailing);
+exports.create_new = function(name, command, schedule, logging, mailing, stopped, remote){
+	var tab = crontab(name, command, schedule, stopped, logging, mailing, remote);
 	tab.created = new Date().valueOf();
 	tab.saved = false;
 	db.insert(tab);
 };
 
 exports.update = function(data){
-	var tab = crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing);
+	var tab = crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote);
 	tab.saved = false;
 	db.update({_id: data._id}, tab);
 };
