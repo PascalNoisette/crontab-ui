@@ -21,7 +21,7 @@ var cron_parser = require("cron-parser");
 exports.log_folder = __dirname + '/crontabs/logs';
 exports.env_file = __dirname + '/crontabs/env.db';
 
-crontab = function(name, command, schedule, stopped, logging, mailing){
+crontab = function(name, command, schedule, stopped, logging, mailing, remote){
 	var data = {};
 	data.name = name;
 	data.command = command;
@@ -34,17 +34,20 @@ crontab = function(name, command, schedule, stopped, logging, mailing){
 	if (!mailing)
 		mailing = {};
 	data.mailing = mailing;
+    if (!remote)
+        remote = {};
+    data.remote = remote;
 	return data;
 };
 
-exports.create_new = function(name, command, schedule, logging, mailing, stopped){
-	var tab = crontab(name, command, schedule, stopped, logging, mailing);
+exports.create_new = function(name, command, schedule, logging, mailing, stopped, remote){
+	var tab = crontab(name, command, schedule, stopped, logging, mailing, remote);
 	tab.created = new Date().valueOf();
 	db.insert(tab);
 };
 
 exports.update = function(data){
-	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing));
+	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote));
 };
 
 exports.status = function(_id, stopped){
@@ -73,13 +76,23 @@ exports.get_crontab = function(_id, callback) {
 		callback(docs[0]);
 	});
 };
-
+function getFullCommand(res)
+{
+    if ("remote" in res) {
+        if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
+            res.command = "ssh -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + res.command;
+        } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
+            res.command = "/usr/bin/docker run --rm " + res.remote.docker.image + " " + res.command;
+        }
+    }
+    return res.command
+}
 exports.runjob = function(_id, callback) {
 	db.find({_id: _id}).exec(function(err, docs){
         var res = docs[0];
         var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
         var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
-        childProcess.spawn('sh', ['-c', res.command], {stdio: ['ignore', output, output2]});
+        childProcess.spawn('sh', ['-c', getFullCommand(res)], {stdio: ['ignore', output, output2]});
 	});
 };
 exports.runhook = function(_id, env) {
@@ -88,7 +101,7 @@ exports.runhook = function(_id, env) {
         if (typeof(res) != "undefined") {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
-            childProcess.spawn('sh', ['-c', res.command], {stdio: ['ignore', output, output2], env: env});
+            childProcess.spawn('sh', ['-c', getFullCommand(res)], {stdio: ['ignore', output, output2], env: env});
         }
     });
 };
@@ -105,11 +118,11 @@ exports.set_crontab = function(env_vars, callback){
 				let stderr = path.join(cronPath, tab._id + ".stderr");
 				let stdout = path.join(cronPath, tab._id + ".stdout");
 				let log_file = path.join(exports.log_folder, tab._id + ".log");
+				let command  = getFullCommand(res);
+				if(command[command.length-1] != ";") // add semicolon
+                    command +=";";
 
-				if(tab.command[tab.command.length-1] != ";") // add semicolon
-					tab.command +=";";
-
-				crontab_string += tab.schedule + " ({ " + tab.command + " } | tee " + stdout + ") 3>&1 1>&2 2>&3 | tee " + stderr;
+				crontab_string += tab.schedule + " ({ " + command + " } | tee " + stdout + ") 3>&1 1>&2 2>&3 | tee " + stderr;
 
 				if (tab.logging && tab.logging == "true") {
 					crontab_string += "; if test -f " + stderr +

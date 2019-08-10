@@ -36,6 +36,44 @@
 	</div>
 
 	<br />
+          <form id="job-remote">
+      <div class="row">
+          <div class="col-md-4">
+          <label><input type="checkbox" id="job-docker" name='job-remote[docker][enabled]' style="position:relative;top:2px" onclick="toggleRemote(this.id);"/> Dockerized</label><br />
+          </div>
+          <div class="col-md-4">
+              <label><input type="checkbox" id="job-ssh" name='job-remote[ssh][enabled]' style="position:relative;top:2px" onclick="toggleRemote(this.id);"/> Remotely with ssh</label><br />
+        </div>
+      </div>
+          <div class="bg-warning text-dark" >
+      <div id="job-docker-params" class="collapse">
+          <label>Docker configuration</label>
+          <div class="row">
+              <div class="col-md-4">
+                  <label>Image</label>
+                  <input type='text' class='form-control' name="job-remote[docker][image]"/>
+             </div>
+          </div>
+      </div>
+      <div id="job-ssh-params" class="collapse">
+          <div class="row">
+              <div class="col-md-4">
+                  &nbsp;
+              </div>
+              <div class="col-md-4">
+                  <label>Ssh configuration</label>
+                  <br/>
+                  <label>Server</label>
+                  <input type='text' class='form-control' name='job-remote[ssh][server]'/>
+                  <label>Port</label>
+                  <input type='text' class='form-control' name='job-remote[ssh][port]'/>
+                  <label>Key</label>
+                  <span disabled="disabled" type='text' class='disabled form-control' id='job-remote-ssh-key' style="overflow: hidden;padding-bottom: 3em;"/>
+             </div>
+          </div>
+      </div>
+      </div>
+          </form>
 	<br />
 	<label>Job</label>
 	<input type='text' class='form-control' id='job-string' disabled='disabled'/><br />

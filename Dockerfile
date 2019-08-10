@@ -13,6 +13,10 @@ RUN   apk --no-cache add \
       curl \
       nodejs \
       nodejs-npm \
+      docker \
+      openssh-client \
+      ca-certificates \
+      bash \
       supervisor
 
 COPY ./package.json ./package-lock.json /crontab-ui/

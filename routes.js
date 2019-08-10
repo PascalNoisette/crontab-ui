@@ -15,4 +15,5 @@ exports.routes = {
 	"import": "/import", // this is import from database
 	"import_crontab": "/import_crontab", // this is from existing crontab
 	"logger": "/logger",
+	"get_ssh_key": "/get_ssh_key",
 };
