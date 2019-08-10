@@ -93,7 +93,7 @@ function getFullCommand(res)
 {
     if ("remote" in res) {
         if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
-            res.command = "ssh " + res.remote.ssh.server + " " + res.command;
+            res.command = "ssh -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + res.command;
         } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
             res.command = "/usr/bin/docker run --rm " + res.remote.docker.image + " " + res.command;
         }

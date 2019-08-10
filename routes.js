@@ -16,6 +16,7 @@ exports.routes = {
 	"import_crontab": "/import_crontab", // this is from existing crontab
 	"logger": "/logger",
 	"stdout": "/stdout",
+	"get_ssh_key": "/get_ssh_key"
 };
 
 exports.relative = Object.keys(exports.routes).reduce((p, c) => ({...p, [c]: exports.routes[c].replace(/^\//, '')}), {});

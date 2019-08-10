@@ -5,7 +5,7 @@ var crontab = require("./crontab");
 var restore = require("./restore");
 var moment = require('moment');
 var basicAuth = require('express-basic-auth');
-
+var childProcess = require('child_process');
 var path = require('path');
 var mime = require('mime-types');
 var fs = require('fs');
@@ -210,6 +210,29 @@ function sendLog(path, req, res) {
 	else
 		res.end("No errors logged yet");
 }
+
+// get public key of this server
+app.get(routes.get_ssh_key, function(req, res) {
+	var dest = '/root/.ssh/';
+    var file = 'id_rsa';
+    if (!fs.existsSync(dest)) {
+    	fs.mkdirSync(dest);
+    }
+    if (!fs.existsSync(dest + file + ".pub")) {
+    	console.log("key gen");
+        childProcess.execFileSync("sh", ["-c", "/usr/bin/ssh-keygen -q -t rsa -N '' -f " + dest + file]);
+    }
+    res.download(dest + file + ".pub");
+});
+
+// get the log file a given job. id passed as query param
+app.get(routes.logger, function(req, res) {
+	_file = crontab.log_folder +"/"+req.query.id+".log";
+	if (fs.existsSync(_file))
+		res.sendFile(_file);
+	else
+		res.end("No errors logged yet");
+});
 
 // get the log file a given job. id passed as query param
 app.get(routes.logger, function(req, res) {

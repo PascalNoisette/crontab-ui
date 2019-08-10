@@ -406,6 +406,9 @@ function toggleRemote(element){
 		antagonists = combinaison[element][1];
 		antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.toggle('collapse'); });
 		document.getElementById(block).classList.toggle('collapse');
+        $.get(routes.get_ssh_key, {}, function(data){
+            document.getElementById("job-remote-ssh-key").innerText=data;
+        });
     }
 }
 
