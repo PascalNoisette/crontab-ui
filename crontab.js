@@ -21,7 +21,7 @@ var cron_parser = require("cron-parser");
 exports.log_folder = __dirname + '/crontabs/logs';
 exports.env_file = __dirname + '/crontabs/env.db';
 
-crontab = function(name, command, schedule, stopped, logging, mailing){
+crontab = function(name, command, schedule, stopped, logging, mailing, remote){
 	var data = {};
 	data.name = name;
 	data.command = command;
@@ -34,17 +34,20 @@ crontab = function(name, command, schedule, stopped, logging, mailing){
 	if (!mailing)
 		mailing = {};
 	data.mailing = mailing;
+    if (!remote)
+        remote = {};
+    data.remote = remote;
 	return data;
 };
 
-exports.create_new = function(name, command, schedule, logging, mailing){
-	var tab = crontab(name, command, schedule, false, logging, mailing);
+exports.create_new = function(name, command, schedule, logging, mailing, remote){
+	var tab = crontab(name, command, schedule, false, logging, mailing, remote);
 	tab.created = new Date().valueOf();
 	db.insert(tab);
 };
 
 exports.update = function(data){
-	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, null, data.logging, data.mailing));
+	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, null, data.logging, data.mailing, data.remote));
 };
 
 exports.status = function(_id, stopped){

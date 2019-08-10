@@ -107,6 +107,10 @@ function editJob(_id){
 		if (job.mailing) {
 			$("#job-mailing").attr("data-json", JSON.stringify(job.mailing));
 		}
+        if (job.remote) {
+            $("#job-remote").deserialize(job.remote);
+            $("#job-remote").find("input[type=checkbox]").each(function(f, e){if (e.checked) toggleRemote(e.id)});
+        }
 		schedule = job.schedule;
 		job_command = job.command;
 		if (job.logging && job.logging != "false")
@@ -122,8 +126,9 @@ function editJob(_id){
 		}
 		let name = $("#job-name").val();
 		let mailing = JSON.parse($("#job-mailing").attr("data-json"));
+        let remote = $("#job-remote").serialize();
 		let logging = $("#job-logging").prop("checked");
-		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: _id, logging: logging, mailing: mailing}, function(){
+		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: _id, logging: logging, mailing: mailing, remote: remote}, function(){
 			location.reload();
 		});
 	});
@@ -151,8 +156,9 @@ function newJob(){
 		}
 		let name = $("#job-name").val();
 		let mailing = JSON.parse($("#job-mailing").attr("data-json"));
+		let remote = $("#job-remote").serialize();
 		let logging = $("#job-logging").prop("checked");
-		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: -1, logging: logging, mailing: mailing}, function(){
+		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: -1, logging: logging, mailing: mailing, remote: remote}, function(){
 			location.reload();
 		});
 	});
@@ -188,6 +194,38 @@ function import_db(){
 	});
 }
 
+$.fn.deserialize = function (serializedString)
+{
+    var $form = $(this);
+    $form[0].reset();    // (A) optional
+    serializedString = serializedString.replace(/\+/g, '%20'); // (B)
+    var formFieldArray = serializedString.split("&");
+
+    // Loop over all name-value pairs
+    $.each(formFieldArray, function(i, pair){
+        var nameValue = pair.split("=");
+        var name = decodeURIComponent(nameValue[0]); // (C)
+        var value = decodeURIComponent(nameValue[1]);
+        // Find one or more fields
+        var $field = $form.find('[name=\"' + name + '"]');
+
+        // Checkboxes and Radio types need to be handled differently
+        if ($field[0].type == "radio" || $field[0].type == "checkbox")
+        {
+            var $fieldWithValue = $field.filter('[value="' + value + '"]');
+            var isFound = ($fieldWithValue.length > 0);
+            // Special case if the value is not defined; value will be "on"
+            if (!isFound && value == "on") {
+                $field.first().prop("checked", true);
+            } else {
+                $fieldWithValue.prop("checked", isFound);
+            }
+        } else { // input, textarea
+            $field.val(value);
+        }
+    });
+    return this;
+}
 function setMailConfig(a){
 	let data = JSON.parse(a.getAttribute("data-json"));
 	let container = document.createElement("div");
@@ -256,9 +294,17 @@ function setMailConfig(a){
 		}
 	});
 }
-function toggleRemote(block, antagonists){
-    antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.toggle('collapse'); });
-    document.getElementById(block).classList.toggle('collapse');
+function toggleRemote(element){
+	let combinaison = {
+        'job-docker':['job-docker-params', ['job-ssh']],
+        'job-ssh':['job-ssh-params', ['job-docker']],
+    }
+    if (typeof(combinaison[element]) != "undefined") {
+		block = combinaison[element][0];
+		antagonists = combinaison[element][1];
+		antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.toggle('collapse'); });
+		document.getElementById(block).classList.toggle('collapse');
+    }
 }
 function setHookConfig(a){
 	messageBox("<p>Coming Soon</p>", "Hooks", null, null, null);
