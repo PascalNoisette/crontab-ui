@@ -5,7 +5,7 @@ var crontab = require("./crontab");
 var restore = require("./restore");
 var moment = require('moment');
 var basicAuth = require('express-basic-auth');
-
+var childProcess = require('child_process');
 var path = require('path');
 var mime = require('mime-types');
 var fs = require('fs');
@@ -209,6 +209,20 @@ app.post(routes.import, function(req, res) {
 app.get(routes.import_crontab, function(req, res) {
 	crontab.import_crontab();
 	res.end();
+});
+
+// get public key of this server
+app.get(routes.get_ssh_key, function(req, res) {
+	var dest = '/root/.ssh/';
+    var file = 'id_rsa';
+    if (!fs.existsSync(dest)) {
+    	fs.mkdirSync(dest);
+    }
+    if (!fs.existsSync(dest + file + ".pub")) {
+    	console.log("key gen");
+        childProcess.execFileSync("sh", ["-c", "/usr/bin/ssh-keygen -q -t rsa -N '' -f " + dest + file]);
+    }
+    res.download(dest + file + ".pub");
 });
 
 // get the log file a given job. id passed as query param
