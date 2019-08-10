@@ -12,6 +12,7 @@ RUN   apk --no-cache add \
       wget \
       curl \
       nodejs \
+      docker \
       supervisor
 
 COPY supervisord.conf /etc/supervisord.conf

@@ -78,10 +78,19 @@ exports.get_crontab = function(_id, callback) {
 };
 
 exports.runjob = function(_id, callback) {
-	db.find({_id: _id}).exec(function(err, docs){
-		var res = docs[0];
-		exec(res.command, function(error, stdout, stderr){
+	db.find({_id: _id}).exec(function(err, docs) {
+        var res = docs[0];
+        if ("remote" in res) {
+            if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
+            	res.command = "ssh " + res.remote.ssh.server + " " + res.command;
+            } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
+				res.command = "/usr/bin/docker run --rm " + res.remote.docker.image + " " + res.command;
+			}
+		}
+        exec(res.command, function(error, stdout, stderr){
+			console.log(error);
 			console.log(stdout);
+			console.log(stderr);
 		});
 	});
 };
