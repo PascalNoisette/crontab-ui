@@ -89,13 +89,23 @@ exports.get_crontab = function(_id, callback) {
 		callback(docs[0]);
 	});
 };
-
+function getFullCommand(res)
+{
+    if ("remote" in res) {
+        if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
+            res.command = "ssh " + res.remote.ssh.server + " " + res.command;
+        } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
+            res.command = "/usr/bin/docker run --rm " + res.remote.docker.image + " " + res.command;
+        }
+    }
+    return res.command
+}
 exports.runjob = function(_id, callback) {
 	db.find({_id: _id}).exec(function(err, docs){
         var res = docs[0];
         var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
         var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
-        childProcess.spawn('sh', ['-c', res.command], {stdio: ['ignore', output, output2]});
+        childProcess.spawn('sh', ['-c', getFullCommand(res)], {stdio: ['ignore', output, output2]});
 	});
 };
 exports.runhook = function(_id, env) {
@@ -104,7 +114,7 @@ exports.runhook = function(_id, env) {
         if (typeof(res) != "undefined") {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
-            childProcess.spawn('sh', ['-c', res.command], {stdio: ['ignore', output, output2], env: env});
+            childProcess.spawn('sh', ['-c', getFullCommand(res)], {stdio: ['ignore', output, output2], env: env});
         }
     });
 };
@@ -175,9 +185,33 @@ exports.set_crontab = function(env_vars, callback) {
 		}
 		tabs.forEach(function(tab){
 			if(!tab.stopped) {
-				crontab_string += tab.schedule
-				crontab_string += " "
-				crontab_string += make_command(tab)
+
+				let stderr = path.join(cronPath, tab._id + ".stderr");
+				let stdout = path.join(cronPath, tab._id + ".stdout");
+				let log_file = path.join(exports.log_folder, tab._id + ".log");
+				let command  = getFullCommand(res);
+				if(command[command.length-1] != ";") // add semicolon
+                    command +=";";
+
+				crontab_string += tab.schedule + " ({ " + command + " } | tee " + stdout + ") 3>&1 1>&2 2>&3 | tee " + stderr;
+
+				if (tab.logging && tab.logging == "true") {
+					crontab_string += "; if test -f " + stderr +
+					"; then date >> " + log_file +
+					"; cat " + stderr + " >> " + log_file +
+					"; fi";
+				}
+
+				if (tab.hook) {
+					crontab_string += "; if test -f " + stdout +
+					"; then " + tab.hook + " < " + stdout +
+					"; fi";
+				}
+
+				if (tab.mailing && JSON.stringify(tab.mailing) != "{}"){
+					crontab_string += "; /usr/local/bin/node " + __dirname + "/bin/crontab-ui-mailer.js " + tab._id + " " + stdout + " " + stderr;
+				}
+
 				crontab_string += "\n";
 			}
 		});
