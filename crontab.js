@@ -93,9 +93,16 @@ exports.runhook = function(_id, env) {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
             var tempName = temp.path();
-            var command = "sh -s < " + tempName;
-            fs.writeFileSync(tempName, res.command);
-            fs.chmodSync(tempName, '0755');
+            var command = "sh -s < " + tempName + ".sh";
+            fs.writeFileSync(
+                tempName+ ".sh",
+                "cat << EOF > " + tempName + "\n" +
+                res.command                + "\n" +
+                "EOF"                      + "\n" +
+                "chmod +x " + tempName     + "\n" +
+                tempName                   + "\n" +
+                "rm -f " + tempName
+            );
 
             if ("remote" in res) {
                 if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
@@ -107,7 +114,7 @@ exports.runhook = function(_id, env) {
 
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
             execution.on('close', (code) => {
-                fs.unlink(tempName, function(err){});
+                fs.unlink(tempName + ".sh" , function(err){});
             });
         }
     });
