@@ -117,34 +117,23 @@ exports.set_crontab = function(env_vars, callback){
 			if(!tab.stopped) {
 				let stderr = path.join(cronPath, tab._id + ".stderr");
 				let stdout = path.join(cronPath, tab._id + ".stdout");
-				let log_file = path.join(exports.log_folder, tab._id + ".log");
-				let command  = getFullCommand(res);
+				let command  = "/usr/bin/curl 127.0.0.1:8000/hook/?id=" + tab._id;
 				if(command[command.length-1] != ";") // add semicolon
                     command +=";";
 
-				crontab_string += tab.schedule + " ({ " + command + " } | tee " + stdout + ") 3>&1 1>&2 2>&3 | tee " + stderr;
-
-				if (tab.logging && tab.logging == "true") {
-					crontab_string += "; if test -f " + stderr +
-					"; then date >> " + log_file +
-					"; cat " + stderr + " >> " + log_file +
-					"; fi";
-				}
-
-				if (tab.hook) {
-					crontab_string += "; if test -f " + stdout +
-					"; then " + tab.hook + " < " + stdout +
-					"; fi";
-				}
+				crontab_string += tab.schedule + " " + command;
 
 				if (tab.mailing && JSON.stringify(tab.mailing) != "{}"){
 					crontab_string += "; /usr/local/bin/node " + __dirname + "/bin/crontab-ui-mailer.js " + tab._id + " " + stdout + " " + stderr;
 				}
 
 				crontab_string += "\n";
+
+			} else {
+				console.log(tab._id +  " is stopped");
 			}
 		});
-
+        console.log("Backed up as " + crontab_string);
 		fs.writeFile(exports.env_file, env_vars, function(err) {
 			if (err) callback(err);
 			// In docker we're running as the root user, so we need to write the file as root and not crontab
@@ -239,9 +228,12 @@ exports.import_crontab = function(){
 						throw err;
 					}
 					if(!doc){
-						exports.create_new(name, command, schedule, null);
-					}
-					else{
+						exports.create_new(name, command, schedule, false, {}, false, {});
+					} else if(command.match("/usr/bin/curl 127.0.0.1:8000/hook")){
+                        doc.schedule = schedule;
+                        exports.update(doc);
+                    }
+                    else{
 						doc.command = command;
 						doc.schedule = schedule;
 						exports.update(doc);
