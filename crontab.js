@@ -1,6 +1,7 @@
 /*jshint esversion: 6*/
 //load database
 var Datastore = require('nedb');
+var temp = require('temp');
 var path = require("path");
 
 exports.db_folder = process.env.CRON_DB_PATH === undefined ? path.join(__dirname,  "crontabs") : process.env.CRON_DB_PATH;
@@ -91,30 +92,36 @@ exports.get_crontab = function(_id, callback) {
 };
 function getFullCommand(res)
 {
-    if ("remote" in res) {
-        if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
-            res.command = "ssh -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + res.command;
-        } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
-            res.command = "/usr/bin/docker run --rm " + res.remote.docker.image + " " + res.command;
-        }
-    }
-    return res.command
+
+    return command
 }
 exports.runjob = function(_id, callback) {
-	db.find({_id: _id}).exec(function(err, docs){
-        var res = docs[0];
-        var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
-        var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
-        childProcess.spawn('sh', ['-c', getFullCommand(res)], {stdio: ['ignore', output, output2]});
-	});
+	exports.runhook(_id, process.env);
 };
 exports.runhook = function(_id, env) {
     db.find({_id: _id}).exec(function(err, docs){
         var res = docs[0];
+
         if (typeof(res) != "undefined") {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
-            childProcess.spawn('sh', ['-c', getFullCommand(res)], {stdio: ['ignore', output, output2], env: env});
+            var tempName = temp.path();
+            var command = "sh -s < " + tempName;
+            fs.writeFileSync(tempName, res.command);
+            fs.chmodSync(tempName, '0755');
+
+            if ("remote" in res) {
+                if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
+                    command = "ssh -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + command;
+                } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
+                    command = "/usr/bin/docker run -i --rm " + res.remote.docker.image + " " + command;
+                }
+            }
+
+            const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
+            execution.on('close', (code) => {
+                fs.unlink(tempName, function(err){});
+            });
         }
     });
 };
