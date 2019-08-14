@@ -17,6 +17,7 @@
     "moment": "latest",
     "nedb": "latest",
     "temp": "latest",
+    "mxgraph": "latest",
     "nodemailer": "latest"
   },
   "engines": {
