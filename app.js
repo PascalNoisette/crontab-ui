@@ -46,6 +46,9 @@ app.use(busboy()); // to support file uploads
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/public/js'));
 app.use(express.static(__dirname + '/config'));
+app.use(express.static(__dirname + '/config'));
+app.use(express.static(__dirname + '/node_modules/mxgraph/javascript'));
+
 app.set('views', __dirname + '/views');
 
 // set host to 127.0.0.1 or the value set by environment var HOST
