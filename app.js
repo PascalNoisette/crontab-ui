@@ -55,6 +55,7 @@ app.use(express.static(__dirname + '/public/js'));
 app.use(express.static(__dirname + '/config'));
 app.use(express.static(__dirname + '/config'));
 app.use(express.static(__dirname + '/node_modules/mxgraph/javascript'));
+app.use(express.static(__dirname + '/node_modules/mxgraph/javascript/src'));
 
 app.set('views', __dirname + '/views');
 
