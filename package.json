@@ -17,6 +17,8 @@
     "moment": "latest",
     "nedb": "latest",
     "temp": "latest",
+    "express-minify": "latest",
+    "compression": "latest",
     "nodemailer": "latest"
   },
   "engines": {

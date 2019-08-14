@@ -10,6 +10,8 @@ var path = require('path');
 var mime = require('mime-types');
 var fs = require('fs');
 var busboy = require('connect-busboy'); // for file upload
+var minify = require('express-minify');
+var compression = require('compression')
 
 // basic auth
 var BASIC_AUTH_USER = process.env.BASIC_AUTH_USER;
@@ -49,6 +51,32 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 }));
 app.use(busboy()); // to support file uploads
 
+
+// Setup minification
+// Order is important here as Ace will fail with an invalid content encoding issue
+var minifyErrorHandler = function (aErr, aCallback) {
+    console.log([ // NOTE: Pushing this to stderr instead of default stdout
+        'MINIFICATION WARNING (release):',
+        '  filename: ' + aErr.filename,
+        '  message: ' + aErr.message,
+        '  line: ' + aErr.line + ' col: ' + aErr.col + ' pos: ' + aErr.pos,
+        '  body: ' + aErr.body.slice(0, 200)
+
+    ].join('\n'));
+
+    if (aErr && aErr.stage === 'compile') {
+        aCallback(aErr.error, JSON.stringify(aErr.error));
+        return;
+    }
+
+    aCallback(aErr.error, aErr.body);
+
+};
+app.use(compression());
+app.use(minify({
+    jsMatch: /js/,
+    onerror: minifyErrorHandler
+}));
 // include all folders
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/public/js'));
