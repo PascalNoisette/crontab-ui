@@ -16,7 +16,7 @@ function loadGraphFromCrontabs(container, crontabs)
 
         // Creates the graph inside the given container
         var graph = new mxGraph(container);
-
+        graph.setConnectable(true);
         putStyle(graph);
 
         // Enables rubberband selection
@@ -42,6 +42,7 @@ function loadGraphFromCrontabs(container, crontabs)
                 getPool: function (crontab) {
                     if(!(getPoolName(crontab) in this.instances)) {
                         this.instances[getPoolName(crontab)] = graph.insertVertex(parent, null, getPoolName(crontab), 0, this.yPool, 640, 0, mxConstants.SHAPE_SWIMLANE)
+                        this.instances[getPoolName(crontab)].setConnectable(false);
                         this.xCrontab[getPoolName(crontab)] = 10 + space;
                         this.yPool += h + space;
                     }
