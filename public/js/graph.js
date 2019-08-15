@@ -23,6 +23,8 @@ function loadGraphFromCrontabs(container, crontabs)
         // Enables rubberband selection
         new mxRubberband(graph);
 
+
+
         // Gets the default parent for inserting new cells. This
         // is normally the first child of the root (ie. layer 0).
         var parent = graph.getDefaultParent();
@@ -30,25 +32,22 @@ function loadGraphFromCrontabs(container, crontabs)
         // Adds cells to the model in a single step
         graph.getModel().beginUpdate();
 
-        //var lane1a = graph.insertVertex(pool1, null, 'Lane A', 0, 0, 640, 100, mxConstants.SHAPE_SWIMLANE);
         try
         {
             var w = 80;
             var h = 100;
             var space = 20;
             var pools = {
-                instances:{},
                 xCrontab:{},
-                vertex:{},
                 yPool:0,
                 getPool: function (crontab) {
-                    if(!(getPoolName(crontab) in this.instances)) {
-                        this.instances[getPoolName(crontab)] = graph.insertVertex(parent, null, getPoolName(crontab), 0, this.yPool, 640, 0, mxConstants.SHAPE_SWIMLANE)
-                        this.instances[getPoolName(crontab)].setConnectable(false);
+                    if (typeof(graph.getModel().getCell(getPoolName(crontab))) == "undefined") {
+                        let pool = graph.insertVertex(parent, getPoolName(crontab), getPoolName(crontab), 0, this.yPool, 640, 0, mxConstants.SHAPE_SWIMLANE)
+                        pool.setConnectable(false);
                         this.xCrontab[getPoolName(crontab)] = 10 + space;
                         this.yPool += h + space;
                     }
-                    return this.instances[getPoolName(crontab)];
+                    return graph.getModel().getCell(getPoolName(crontab));
                 },
                 getNextXinPool: function (crontab) {
                     let x = this.xCrontab[getPoolName(crontab)];
@@ -57,13 +56,13 @@ function loadGraphFromCrontabs(container, crontabs)
                 }
             };
             crontabs.forEach(function(crontab) {
-                pools.vertex[crontab._id] = graph.insertVertex(pools.getPool(crontab), crontab._id, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
+                graph.insertVertex(pools.getPool(crontab), crontab._id, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
             });
             crontabs.forEach(function(sourceJob) {
 
                 if ("trigger" in sourceJob && sourceJob.trigger.forEach) {
                     sourceJob.trigger.forEach(function(targetJobId) {
-                        graph.insertEdge(parent, null, '', pools.vertex[sourceJob._id], pools.vertex[targetJobId]);
+                        graph.insertEdge(parent, null, '', graph.getModel().getCell(sourceJob._id), graph.getModel().getCell(targetJobId));
                     });
                 }
             });
