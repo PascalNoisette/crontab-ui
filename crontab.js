@@ -120,6 +120,11 @@ exports.runhook = function(_id, env) {
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
             execution.on('close', (code) => {
                 fs.unlink(tempName + ".sh" , function(err){});
+                if ("trigger" in res && typeof(res.trigger.forEach) != "undefined") {
+                    res.trigger.forEach(function(jobId) {
+                        exports.runhook(jobId, env);
+                    });
+                }
             });
         }
     });
