@@ -1,6 +1,12 @@
 // Program starts here. Creates a sample graph in the
 // DOM node with the specified ID. This function is invoked
 // from the onLoad event handler of the document (see below).
+
+var JOB_WIDTH = 80;
+var JOB_HEIGHT = 100;
+var JOB_SPACER = 20;
+var POOL_LANE_LENGTH = 640;
+
 function loadGraphFromCrontabs(container, crontabs)
 {
     // Checks if the browser is supported
@@ -34,40 +40,18 @@ function loadGraphFromCrontabs(container, crontabs)
 
         try
         {
-            var w = 80;
-            var h = 100;
-            var space = 20;
-            var pools = {
-                xCrontab:{},
-                yPool:0,
-                getPool: function (crontab) {
-                    if (typeof(graph.getModel().getCell(getPoolName(crontab))) == "undefined") {
-                        let pool = graph.insertVertex(parent, getPoolName(crontab), getPoolName(crontab), 0, this.yPool, 640, 0, mxConstants.SHAPE_SWIMLANE)
-                        pool.setConnectable(false);
-                        this.xCrontab[getPoolName(crontab)] = 10 + space;
-                        this.yPool += h + space;
-                    }
-                    return graph.getModel().getCell(getPoolName(crontab));
-                },
-                getNextXinPool: function (crontab) {
-                    let x = this.xCrontab[getPoolName(crontab)];
-                    this.xCrontab[getPoolName(crontab)] += w + space;
-                    return x + space;
-                }
-            };
+
             crontabs.forEach(function(crontab) {
-                graph.insertVertex(pools.getPool(crontab), crontab._id, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
+                graph.insertVertex(getPool(graph, crontab), crontab._id, crontab.name, 0, 0, JOB_WIDTH, JOB_HEIGHT);
             });
             crontabs.forEach(function(sourceJob) {
-
                 if ("trigger" in sourceJob && sourceJob.trigger.forEach) {
                     sourceJob.trigger.forEach(function(targetJobId) {
                         graph.insertEdge(parent, null, '', graph.getModel().getCell(sourceJob._id), graph.getModel().getCell(targetJobId));
                     });
                 }
             });
-
-
+            alignPools(graph, parent);
         } catch (e) {
             console.error(e);
         }
@@ -79,6 +63,44 @@ function loadGraphFromCrontabs(container, crontabs)
     }
 };
 
+function alignPools(graph, root) {
+    alignChildren(graph, graph.getModel().getChildren(root), 0, 0, 0, JOB_HEIGHT + JOB_SPACER, alignJob);
+}
+function alignJob(graph, onePool) {
+    if (graph.getModel().getChildren(onePool)) {
+        alignChildren(graph, graph.getModel().getChildren(onePool), JOB_SPACER, 0, JOB_HEIGHT, 0, function(){});
+        graph.getModel().getChildren(onePool).map(job=>graph.getModel().getEdges(job).map(edge=>swatchEdgeTarget(graph, edge)))
+    }
+}
+function swatchEdgeTarget(graph, edge) {
+    var position = edge.target.geometry.x - edge.source.geometry.x;
+    if (position<=0 ) {
+        if (edge.target.parent.id == edge.source.parent.id) {
+            graph.moveCells([edge.source], position, 0, false);
+        } else {
+            position -= JOB_HEIGHT;
+        }
+        graph.moveCells([edge.target], -position, 0, false);
+    }
+}
+function alignChildren(graph, children, x, y, xOffset, yOffset, childrenCallback) {
+    if (children) {
+        children.forEach(function (cell){
+            graph.moveCells([cell], x, y, false);
+            x += xOffset;
+            y += yOffset;
+            childrenCallback(graph, cell);
+        });
+    }
+    return [x, y];
+}
+function getPool(graph, crontab) {
+    if (typeof(graph.getModel().getCell(getPoolName(crontab))) == "undefined") {
+        let pool = graph.insertVertex(graph.getDefaultParent(), getPoolName(crontab), getPoolName(crontab), 0, 0, POOL_LANE_LENGTH, JOB_HEIGHT, mxConstants.SHAPE_SWIMLANE)
+        pool.setConnectable(false);
+    }
+    return graph.getModel().getCell(getPoolName(crontab));
+}
 function getPoolName(crontab)
 {
     if ("remote" in crontab) {
