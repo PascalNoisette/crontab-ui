@@ -112,6 +112,12 @@ function editJob(_id){
 		if (job.mailing) {
 			$("#job-mailing").attr("data-json", JSON.stringify(job.mailing));
 		}
+		var trigger = [];
+        if (job.trigger) {
+        	trigger = job.trigger;
+        }
+        $("#job-trigger").val(trigger);
+
         if (job.remote) {
             $("#job-remote").values({"job-remote":job.remote});
             $("#job-remote").find("input[type=checkbox]").each(function(f, e){if (e.checked) toggleRemote(e.id)});
@@ -139,7 +145,8 @@ function editJob(_id){
 		let remote = $("#job-remote").values()["job-remote"];
 		let logging = $("#job-logging").prop("checked");
 		let stopped = $("#job-stopped").prop("checked");
-		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: _id, logging: logging, mailing: mailing, stopped : stopped, remote: remote}, function(){
+		let trigger = $('#job-trigger').val();
+		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: _id, logging: logging, mailing: mailing, stopped : stopped, remote: remote, trigger: trigger}, function(){
 			location.reload();
 		});
 	});
@@ -158,6 +165,7 @@ function newJob(){
 	$("#job-name").val("");
 	$("#job-command").val("");
 	$("#job-mailing").attr("data-json", "{}");
+    $("#job-trigger").val([]);
 	job_string();
 	$("#job-save").unbind("click"); // remove existing events attached to this
 	$("#job-save").click(function(){
@@ -170,7 +178,8 @@ function newJob(){
 		let remote = $("#job-remote").values()["job-remote"];
 		let logging = $("#job-logging").prop("checked");
 		let stopped = $("#job-stopped").prop("checked");
-		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: -1, logging: logging, mailing: mailing, stopped: stopped, remote: remote}, function(){
+        let trigger = $('#job-trigger').val();
+		$.post(routes.save, {name: name, command: job_command , schedule: schedule, _id: -1, logging: logging, mailing: mailing, stopped: stopped, remote: remote, trigger: trigger}, function(){
 			location.reload();
 		});
 	});
