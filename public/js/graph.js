@@ -125,6 +125,7 @@ function putEvent(graph)
         var me = evt.getProperty('event');
         var cell = evt.getProperty('cell');
 
+
         if (cell != null)
         {
             crontabs.forEach(function(crontab) {
@@ -147,9 +148,12 @@ function putEvent(graph)
         {
             graph.getSelectionCells().forEach(function(cell) {
                 crontabs.forEach(function(crontab) {
-                    if (cell.id == crontab._id) {
+                    if (cell.vertex == true && cell.id == crontab._id) {
                         deleteJob(crontab._id);
-                        evt.consume();
+                        return;
+                    } else if (cell.edge == true && cell.source.id == crontab._id) {
+                        crontab.trigger = crontab.trigger.filter(function (id) {return id != cell.target.id;});
+                        editJob(crontab._id);
                         return;
                     }
                 });
