@@ -18,6 +18,7 @@ function loadGraphFromCrontabs(container, crontabs)
         var graph = new mxGraph(container);
         graph.setConnectable(true);
         putStyle(graph);
+        putEvent(graph);
 
         // Enables rubberband selection
         new mxRubberband(graph);
@@ -55,7 +56,7 @@ function loadGraphFromCrontabs(container, crontabs)
                 }
             };
             crontabs.forEach(function(crontab) {
-                var v1 = graph.insertVertex(pools.getPool(crontab), null, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
+                var v1 = graph.insertVertex(pools.getPool(crontab), crontab._id, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
             });
 
             //var e1 = graph.insertEdge(parent, null, '', v1, v2);
@@ -105,4 +106,47 @@ function putStyle(graph)
     style[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#efefef';
 
     graph.getStylesheet().putCellStyle(mxConstants.SHAPE_SWIMLANE, style);
+}
+
+function putEvent(graph)
+{
+
+    graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt)
+    {
+        var me = evt.getProperty('event');
+        var cell = evt.getProperty('cell');
+
+        if (cell != null)
+        {
+            crontabs.forEach(function(crontab) {
+                if (cell.id == crontab._id) {
+                    editJob(crontab._id);
+                    evt.consume();
+                    return;
+                }
+            });
+        }
+
+
+    });
+
+    // Restores focus on graph container and removes text input from DOM
+    mxEvent.addListener(document, 'keyup', function(evt)
+    {
+
+        if (evt.code == "Delete")
+        {
+            graph.getSelectionCells().forEach(function(cell) {
+                crontabs.forEach(function(crontab) {
+                    if (cell.id == crontab._id) {
+                        deleteJob(crontab._id);
+                        evt.consume();
+                        return;
+                    }
+                });
+            });
+        }
+
+    });
+
 }
