@@ -52,8 +52,12 @@ exports.update = function(data){
 	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote, data.trigger));
 };
 
-exports.status = function(_id, stopped){
-	db.update({_id: _id},{$set: {stopped: stopped}});
+exports.update_unsecure = function(data){
+	if ("stopped" in data) {
+        data.stopped = JSON.parse(data.stopped)
+	}
+    data.timestamp = (new Date()).toString();
+    db.update({_id: data._id}, {$set: data});
 };
 
 exports.remove = function(_id){

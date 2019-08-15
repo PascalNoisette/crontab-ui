@@ -98,15 +98,9 @@ app.post(routes.save, function(req, res) {
 	res.end();
 });
 
-// set stop to job
-app.post(routes.stop, function(req, res) {
-	crontab.status(req.body._id, true);
-	res.end();
-});
-
-// set start to job
-app.post(routes.start, function(req, res) {
-	crontab.status(req.body._id, false);
+// set stop, start, etc on existing job
+app.post(routes.update, function(req, res) {
+	crontab.update_unsecure(req.body);
 	res.end();
 });
 
