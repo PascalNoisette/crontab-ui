@@ -47,7 +47,9 @@ function loadGraphFromCrontabs(container, crontabs)
             crontabs.forEach(function(sourceJob) {
                 if ("trigger" in sourceJob && sourceJob.trigger.forEach) {
                     sourceJob.trigger.forEach(function(targetJobId) {
-                        graph.insertEdge(parent, null, '', graph.getModel().getCell(sourceJob._id), graph.getModel().getCell(targetJobId));
+                        if (graph.getModel().getCell(targetJobId)) {
+                            graph.insertEdge(parent, null, '', graph.getModel().getCell(sourceJob._id), graph.getModel().getCell(targetJobId));
+                        }
                     });
                 }
             });
