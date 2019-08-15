@@ -39,6 +39,7 @@ function loadGraphFromCrontabs(container, crontabs)
             var pools = {
                 instances:{},
                 xCrontab:{},
+                vertex:{},
                 yPool:0,
                 getPool: function (crontab) {
                     if(!(getPoolName(crontab) in this.instances)) {
@@ -56,10 +57,18 @@ function loadGraphFromCrontabs(container, crontabs)
                 }
             };
             crontabs.forEach(function(crontab) {
-                var v1 = graph.insertVertex(pools.getPool(crontab), crontab._id, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
+                pools.vertex[crontab._id] = graph.insertVertex(pools.getPool(crontab), crontab._id, crontab.name, pools.getNextXinPool(crontab), 0, w, h);
+            });
+            crontabs.forEach(function(sourceJob) {
+
+                if ("trigger" in sourceJob) {
+                    sourceJob.trigger.forEach(function(targetJobId) {
+                        graph.insertEdge(parent, null, '', pools.vertex[sourceJob._id], pools.vertex[targetJobId]);
+                    });
+                }
             });
 
-            //var e1 = graph.insertEdge(parent, null, '', v1, v2);
+
         } catch (e) {
             console.error(e);
         }
