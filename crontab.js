@@ -64,6 +64,14 @@ exports.status = function(_id, stopped){
 	db.update({_id: _id},{$set: {stopped: stopped, saved: false}});
 };
 
+exports.update_unsecure = function(data){
+	if ("stopped" in data) {
+        data.stopped = JSON.parse(data.stopped)
+	}
+    data.timestamp = (new Date()).toString();
+    db.update({_id: data._id}, {$set: data});
+};
+
 exports.remove = function(_id){
 	db.remove({_id: _id}, {});
 };

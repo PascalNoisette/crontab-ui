@@ -153,7 +153,12 @@ function putEvent(graph)
                         return;
                     } else if (cell.edge == true && cell.source.id == crontab._id) {
                         crontab.trigger = crontab.trigger.filter(function (id) {return id != cell.target.id;});
-                        editJob(crontab._id);
+                        if (crontab.trigger.length == 0) {
+                            crontab.trigger = "";
+                        }
+                        $.post(routes.update, {_id: crontab._id, trigger: crontab.trigger}, function(){
+                            location.reload();
+                        });
                         return;
                     }
                 });
@@ -170,11 +175,13 @@ function putEvent(graph)
 
         crontabs.forEach(function(crontab) {
             if (source.id == crontab._id) {
-                if (!("trigger" in crontab)) {
+                if (!("trigger" in crontab && crontab.trigger.push)) {
                     crontab.trigger = [];
                 }
                 crontab.trigger.push(target.id);
-                editJob(crontab._id);
+                $.post(routes.update, {_id: crontab._id, trigger: crontab.trigger}, function(){
+                    location.reload();
+                });
                 return;
             }
         });
