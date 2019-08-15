@@ -61,7 +61,7 @@ function loadGraphFromCrontabs(container, crontabs)
             });
             crontabs.forEach(function(sourceJob) {
 
-                if ("trigger" in sourceJob) {
+                if ("trigger" in sourceJob && sourceJob.trigger.forEach) {
                     sourceJob.trigger.forEach(function(targetJobId) {
                         graph.insertEdge(parent, null, '', pools.vertex[sourceJob._id], pools.vertex[targetJobId]);
                     });
@@ -160,6 +160,24 @@ function putEvent(graph)
             });
         }
 
+    });
+
+    graph.connectionHandler.addListener(mxEvent.CONNECT, function(sender, evt)
+    {
+        var edge = evt.getProperty('cell');
+        var source = graph.getModel().getTerminal(edge, true);
+        var target = graph.getModel().getTerminal(edge, false);
+
+        crontabs.forEach(function(crontab) {
+            if (source.id == crontab._id) {
+                if (!("trigger" in crontab)) {
+                    crontab.trigger = [];
+                }
+                crontab.trigger.push(target.id);
+                editJob(crontab._id);
+                return;
+            }
+        });
     });
 
 }
