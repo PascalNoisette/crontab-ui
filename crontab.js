@@ -106,7 +106,9 @@ exports.runhook = function(_id, env) {
                 "EOF"                      + "\n" +
                 "chmod +x " + tempName     + "\n" +
                 tempName                   + "\n" +
-                "rm -f " + tempName
+                "RES=$? "                  + "\n" +
+                "rm -f " + tempName        + "\n" +
+                "exit $RES"
             );
 
             if ("remote" in res) {
@@ -122,6 +124,7 @@ exports.runhook = function(_id, env) {
                 fs.unlink(tempName + ".sh" , function(err){});
                 if ("trigger" in res && typeof(res.trigger.forEach) != "undefined") {
                     res.trigger.forEach(function(jobId) {
+                    	env["TRIGGER_RETURN_CODE"] = code;
                         exports.runhook(jobId, env);
                     });
                 }
