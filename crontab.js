@@ -22,7 +22,7 @@ var cron_parser = require("cron-parser");
 exports.log_folder = __dirname + '/crontabs/logs';
 exports.env_file = __dirname + '/crontabs/env.db';
 
-crontab = function(name, command, schedule, stopped, logging, mailing, remote){
+crontab = function(name, command, schedule, stopped, logging, mailing, remote, trigger){
 	var data = {};
 	data.name = name;
 	data.command = command;
@@ -38,21 +38,26 @@ crontab = function(name, command, schedule, stopped, logging, mailing, remote){
     if (!remote)
         remote = {};
     data.remote = remote;
+    data.trigger = trigger;
 	return data;
 };
 
-exports.create_new = function(name, command, schedule, logging, mailing, stopped, remote){
-	var tab = crontab(name, command, schedule, stopped, logging, mailing, remote);
+exports.create_new = function(name, command, schedule, logging, mailing, stopped, remote, trigger){
+	var tab = crontab(name, command, schedule, stopped, logging, mailing, remote, trigger);
 	tab.created = new Date().valueOf();
 	db.insert(tab);
 };
 
 exports.update = function(data){
-	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote));
+	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote, data.trigger));
 };
 
-exports.status = function(_id, stopped){
-	db.update({_id: _id},{$set: {stopped: stopped}});
+exports.update_unsecure = function(data){
+	if ("stopped" in data) {
+        data.stopped = JSON.parse(data.stopped)
+	}
+    data.timestamp = (new Date()).toString();
+    db.update({_id: data._id}, {$set: data});
 };
 
 exports.remove = function(_id){
@@ -115,6 +120,11 @@ exports.runhook = function(_id, env) {
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
             execution.on('close', (code) => {
                 fs.unlink(tempName + ".sh" , function(err){});
+                if ("trigger" in res && typeof(res.trigger.forEach) != "undefined") {
+                    res.trigger.forEach(function(jobId) {
+                        exports.runhook(jobId, env);
+                    });
+                }
             });
         }
     });

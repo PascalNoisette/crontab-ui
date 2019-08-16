@@ -5,9 +5,11 @@
 <script src="script.js"></script>
 <script src="bootstrap.min.js"></script>
 <script src="mailconfig.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.12/datatables.min.js"></script>
+<script src="mxClient.js"></script>
+<script src="graph.js"></script>
+<script type="text/javascript" src="js/datatables.min.js"></script>
 <link rel="stylesheet" href="css/bootstrap.min.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="css/dataTables.bootstrap.min.css"/>
 <script type="text/javascript">
 	var crontabs = [];
 	var routes = [];
@@ -17,6 +19,7 @@
 		crontabs = JSON.parse('<%- crontabs.replace(/\\\\/g, "\\\\\\\\").replace(/\\\"/g,"\\\\\"").replace(/\'/g,"\\\'").replace(/\\t/g, " ").replace(/\\n/g, "\\\\n") %>');
 		routes = JSON.parse('<%- routes %>');
 		$("#env_vars").val(`<%- env  %>`);
+        loadGraphFromCrontabs(document.getElementById('root-graph'), crontabs);
 	})
 </script>
 </head>
@@ -40,7 +43,8 @@
 	<a class="btn btn-success" onclick="setCrontab();"><span class="glyphicon glyphicon-save" aria-hidden="true"></span> Save to crontab</a>
 	<br/>
 	<br/>
-
+	<div class="container" id="root-graph"></div>
+	<br/>
 	<table class="table table-striped" id="main_table">
 		<thead>
 	<tr>

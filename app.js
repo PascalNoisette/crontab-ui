@@ -53,6 +53,10 @@ app.use(busboy()); // to support file uploads
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/public/js'));
 app.use(express.static(__dirname + '/config'));
+app.use(express.static(__dirname + '/config'));
+app.use(express.static(__dirname + '/node_modules/mxgraph/javascript'));
+app.use(express.static(__dirname + '/node_modules/mxgraph/javascript/src'));
+
 app.set('views', __dirname + '/views');
 
 // set host to 127.0.0.1 or the value set by environment var HOST
@@ -85,7 +89,7 @@ If it is a new job @param _id is set to -1
 app.post(routes.save, function(req, res) {
 	// new job
 	if(req.body._id == -1){
-		crontab.create_new(req.body.name, req.body.command, req.body.schedule, req.body.logging, req.body.mailing, req.body.stopped, req.body.remote);
+		crontab.create_new(req.body.name, req.body.command, req.body.schedule, req.body.logging, req.body.mailing, req.body.stopped, req.body.remote, req.body.trigger);
 	}
 	// edit job
 	else{
@@ -94,15 +98,9 @@ app.post(routes.save, function(req, res) {
 	res.end();
 });
 
-// set stop to job
-app.post(routes.stop, function(req, res) {
-	crontab.status(req.body._id, true);
-	res.end();
-});
-
-// set start to job
-app.post(routes.start, function(req, res) {
-	crontab.status(req.body._id, false);
+// set stop, start, etc on existing job
+app.post(routes.update, function(req, res) {
+	crontab.update_unsecure(req.body);
 	res.end();
 });
 

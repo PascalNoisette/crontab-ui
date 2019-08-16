@@ -40,10 +40,10 @@
           <form id="job-remote">
       <div class="row">
           <div class="col-md-4">
-          <label><input type="checkbox" id="job-docker" name='job-remote[docker][enabled]' style="position:relative;top:2px" onclick="toggleRemote(this.id);"/> Dockerized</label><br />
+          <label><input type="checkbox" id="job-docker" name='job-remote[docker][enabled]' style="position:relative;top:2px" onclick="toggleRemote();"/> Dockerized</label><br />
           </div>
           <div class="col-md-4">
-              <label><input type="checkbox" id="job-ssh" name='job-remote[ssh][enabled]' style="position:relative;top:2px" onclick="toggleRemote(this.id);"/> Remotely with ssh</label><br />
+              <label><input type="checkbox" id="job-ssh" name='job-remote[ssh][enabled]' style="position:relative;top:2px" onclick="toggleRemote();"/> Remotely with ssh</label><br />
         </div>
       </div>
           <div class="bg-warning text-dark" >
@@ -75,6 +75,19 @@
       </div>
       </div>
           </form>
+	<br />
+          <label>Trigger other jobs</label><br />
+          <select id='job-trigger' value="" multiple>
+          <% JSON.parse(crontabs).forEach(function(crontab){ %>
+              <option value="<%= crontab._id %>">
+                  <% if (crontab.name) { %>
+                  <%= crontab.name %>
+                  <% } else { %>
+                  <%= crontab._id %>
+                  <% } %>
+              </option>
+          <% }); %>
+          </select>
 	<br />
 	<label>Job</label>
 	<input type='text' class='form-control' id='job-string' disabled='disabled'/><br />
