@@ -118,10 +118,24 @@ function editJob(_id){
         }
         $("#job-trigger").val(trigger);
 
+        $("#job-remote").values({"job-remote":{}});
+        $("#job-remote").find("input[type=checkbox]").each(function (f,e){e.checked=false;});
         if (job.remote) {
             $("#job-remote").values({"job-remote":job.remote});
-            $("#job-remote").find("input[type=checkbox]").each(function(f, e){if (e.checked) toggleRemote(e.id)});
+            $("#job-remote").find("input[type=checkbox]").each(function(f, e){
+            	try {
+					if (job.remote.ssh.enabled == "on" && e.name == "job-remote[ssh][enabled]") {
+                        $(e).prop("checked", true);
+					}
+                } catch (e) {}
+                try {
+					if (job.remote.docker.enabled == "on" && e.name == "job-remote[docker][enabled]") {
+                        $(e).prop("checked", true);
+					}
+				} catch (e) {}
+            });
         }
+        toggleRemote();
 		schedule = job.schedule;
 		job_command = job.command;
 		if (job.logging && job.logging != "false")
@@ -166,6 +180,9 @@ function newJob(){
 	$("#job-command").val("");
 	$("#job-mailing").attr("data-json", "{}");
     $("#job-trigger").val([]);
+    $("#job-remote").values({"job-remote":{}});
+    $("#job-remote").find("input[type=checkbox]").each(function (f,e){e.checked=false;});
+    toggleRemote();
 	job_string();
 	$("#job-save").unbind("click"); // remove existing events attached to this
 	$("#job-save").click(function(){
@@ -404,20 +421,27 @@ function setMailConfig(a){
 	});
 }
 
-function toggleRemote(element){
+function toggleRemote() {
 	let combinaison = {
         'job-docker':['job-docker-params', ['job-ssh']],
         'job-ssh':['job-ssh-params', ['job-docker']],
     }
-    if (typeof(combinaison[element]) != "undefined") {
+    for (var element in combinaison) {
 		block = combinaison[element][0];
 		antagonists = combinaison[element][1];
-		antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.toggle('collapse'); });
-		document.getElementById(block).classList.toggle('collapse');
-        $.get(routes.get_ssh_key, {}, function(data){
-            document.getElementById("job-remote-ssh-key").innerText=data;
-        });
+		if ($("#"+element).prop("checked")) {
+            antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.add('collapse'); });
+            document.getElementById(block).classList.remove('collapse');
+        }  else {
+            antagonists.forEach(function(e){ document.getElementById(e).parentNode.classList.remove('collapse'); });
+            document.getElementById(block).classList.add('collapse');
+        }
+
+
     }
+    $.get(routes.get_ssh_key, {}, function(data){
+        document.getElementById("job-remote-ssh-key").innerText=data;
+    });
 }
 
 // script corresponding to job popup management
