@@ -68,7 +68,6 @@ exports.update_unsecure = function(data){
 	if ("stopped" in data) {
         data.stopped = JSON.parse(data.stopped)
 	}
-    data.timestamp = (new Date()).toString();
     db.update({_id: data._id}, {$set: data});
 };
 
@@ -139,6 +138,7 @@ exports.runhook = function(_id, env) {
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
             execution.on('close', (code) => {
                 fs.unlink(tempName + ".sh" , function(err){});
+                exports.update_unsecure({_id: _id, executed: new Date().valueOf(), code:code});
                 if ("trigger" in res && typeof(res.trigger.forEach) != "undefined") {
                     res.trigger.forEach(function(jobId) {
                     	env["TRIGGER_RETURN_CODE"] = code;
