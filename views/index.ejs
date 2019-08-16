@@ -53,6 +53,7 @@
 		<th>Job</th>
 		<th>Time</th>
 		<th>Last Modified</th>
+		<th>Last Executed</th>
 		<th></th>
 	</tr>
 </thead>
@@ -81,6 +82,7 @@
 				<td class="col-lg-1"><%= crontab.command.split('\n')[0].substring(0,31) %></td>
 				<td><span style="cursor:pointer" data-toggle="tooltip" data-placement="bottom" title="<%= crontab.next %>"><%= crontab.schedule %></span></td>
 				<td style="width:20%" title="<%= crontab.timestamp %>"><%= moment(new Date(crontab.timestamp)).fromNow() %></td>
+				<td style="width:20%" title="<%= crontab.executed %>"><% if (crontab.executed) { %><%= moment(new Date(crontab.executed)).fromNow() %><% } %><% if (crontab.code!=0) {%> (code <%= crontab.code %>)<% } %></td>
 				<td>
 
 		<!-- controls based on crontab state -->

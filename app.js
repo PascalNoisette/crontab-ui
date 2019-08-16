@@ -100,6 +100,7 @@ app.post(routes.save, function(req, res) {
 
 // set stop, start, etc on existing job
 app.post(routes.update, function(req, res) {
+    req.body.timestamp = (new Date()).toString();
 	crontab.update_unsecure(req.body);
 	res.end();
 });
