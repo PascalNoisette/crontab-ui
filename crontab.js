@@ -75,7 +75,17 @@ exports.crontabs = function(callback){
 		callback(docs);
 	});
 };
-
+exports.kill = function(_id) {
+    exports.get_crontab(_id, function (job) {
+    	if (job.pid) {
+    		try {
+				process.kill(job.pid);
+            } catch (e) {
+				exports.update_unsecure({_id:_id, pid:null});
+            }
+        }
+	});
+};
 exports.get_crontab = function(_id, callback) {
 	db.find({_id: _id}).exec(function(err, docs){
 		callback(docs[0]);
@@ -93,7 +103,7 @@ exports.runhook = function(_id, env) {
     db.find({_id: _id}).exec(function(err, docs){
         var res = docs[0];
 
-        if (typeof(res) != "undefined") {
+        if (typeof(res) != "undefined" && !res.pid) {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
             var tempName = temp.path();
@@ -118,10 +128,16 @@ exports.runhook = function(_id, env) {
                 }
             }
 
+            process.stdin.pause();
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
-            execution.on('close', (code) => {
+
+            exports.update_unsecure({_id: _id, pid: execution.pid});
+            execution.on('close', (code, signal) => {
                 fs.unlink(tempName + ".sh" , function(err){});
-                exports.update_unsecure({_id: _id, executed: new Date().valueOf(), code:code});
+                if (!code && code !==0) {
+                	code = signal
+				}
+                exports.update_unsecure({_id: _id, executed: new Date().valueOf(), code:code, pid:null});
                 if ("trigger" in res && typeof(res.trigger.forEach) != "undefined") {
                     res.trigger.forEach(function(jobId) {
                     	env["TRIGGER_RETURN_CODE"] = code;

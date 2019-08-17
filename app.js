@@ -104,6 +104,11 @@ app.post(routes.update, function(req, res) {
 	crontab.update_unsecure(req.body);
 	res.end();
 });
+// set stop, start, etc on existing job
+app.post(routes.kill, function(req, res) {
+    crontab.kill(req.body._id);
+    res.end();
+});
 
 // remove a job
 app.post(routes.remove, function(req, res) {
