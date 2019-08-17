@@ -139,13 +139,12 @@ exports.runhook = function(_id, env) {
 
             if ("remote" in res) {
                 if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
-                    command = "ssh -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + command;
+                    command = "ssh -o \"BatchMode=yes\" -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + command;
                 } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
                     command = "/usr/bin/docker run -i --rm " + res.remote.docker.image + " " + command;
                 }
             }
 
-            process.stdin.pause();
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
 
             exports.update_unsecure({_id: _id, pid: execution.pid});
