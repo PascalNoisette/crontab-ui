@@ -1,4 +1,5 @@
 <!-- Job -->
+
 <div class="modal fade" id="job">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -7,10 +8,12 @@
         <h4 class="modal-title" id="job-title">Job</h4>
       </div>
       <div class="modal-body" id="job-body">
+          <form id="job_form">
 	<label>Name (Optional)</label>
-	<input type='text' class='form-control' id='job-name'/><br />
+	<input type='hidden' class='form-control' name='_id' value="-1"/><br />
+	<input type='text' class='form-control' name='name'/><br />
 	<label>Command</label>
-	<textarea type='text' class='form-control' id='job-command' onkeyup="job_command = $(this).val(); job_string();" style="resize: vertical;"></textarea>
+	<textarea type='text' class='form-control' name='command' onkeyup="job_command = $(this).val(); job_string();" style="resize: vertical;"></textarea>
           <br />
 	<label>Quick Schedule</label><br />
 	<a class="btn btn-primary" onclick="schedule = '@reboot'; job_string();">Startup</a>
@@ -40,19 +43,19 @@
           <form id="job-remote">
       <div class="row">
           <div class="col-md-4">
-          <label><input type="checkbox" id="job-docker" name='job-remote[docker][enabled]' style="position:relative;top:2px" onclick="toggleRemote();"/> Dockerized</label><br />
+          <label><input type="checkbox" id="job-docker" name='remote_docker_enabled' style="position:relative;top:2px" onclick="toggleRemote();"/> Dockerized</label><br />
           </div>
           <div class="col-md-4">
-              <label><input type="checkbox" id="job-ssh" name='job-remote[ssh][enabled]' style="position:relative;top:2px" onclick="toggleRemote();"/> Remotely with ssh</label><br />
+              <label><input type="checkbox" id="job-ssh" name='remote_ssh_enabled' style="position:relative;top:2px" onclick="toggleRemote();"/> Remotely with ssh</label><br />
         </div>
       </div>
           <div class="bg-warning text-dark" >
-      <div id="job-docker-params" class="collapse">
+      <div id="job-docker-params" class="collapse">manually
           <label>Docker configuration</label>
           <div class="row">
               <div class="col-md-4">
                   <label>Image</label>
-                  <input type='text' class='form-control' name="job-remote[docker][image]"/>
+                  <input type='text' class='form-control' name="remote[docker][image]"/>
              </div>
           </div>
       </div>
@@ -65,9 +68,9 @@
                   <label>Ssh configuration</label>
                   <br/>
                   <label>Server</label>
-                  <input type='text' class='form-control' name='job-remote[ssh][server]'/>
+                  <input type='text' class='form-control' name='remote[ssh][server]'/>
                   <label>Port</label>
-                  <input type='text' class='form-control' name='job-remote[ssh][port]'/>
+                  <input type='text' class='form-control' name='remote[ssh][port]'/>
                   <label>Key</label>
                   <span disabled="disabled" type='text' class='disabled form-control' id='job-remote-ssh-key' style="overflow: hidden;padding-bottom: 3em;"/>
              </div>
@@ -77,7 +80,7 @@
           </form>
 	<br />
           <label>Trigger other jobs</label><br />
-          <select id='job-trigger' value="" multiple>
+          <select name='trigger' value="" multiple>
           <% JSON.parse(crontabs).forEach(function(crontab){ %>
               <option value="<%= crontab._id %>">
                   <% if (crontab.name) { %>
@@ -90,15 +93,17 @@
           </select>
 	<br />
 	<label>Job</label>
-	<input type='text' class='form-control' id='job-string' disabled='disabled'/><br />
-	<label><input type="checkbox" id="job-logging" style="position:relative;top:2px"/> Enable error logging.</label><br />
-	<label><input type="checkbox" id="job-stopped" style="position:relative;top:2px"/> Stopped.</label><br />
+	<input type='text' class='form-control disabled' id='job-string' name='schedule' /><br />
+	<label><input type="checkbox" name="logging" style="position:relative;top:2px"/> Enable error logging.</label><br />
+	<label><input type="checkbox" name="stopped" style="position:relative;top:2px"/> Stopped.</label><br />
 	<a class="btn btn-primary btn-small" data-json="{}" onclick="setMailConfig(this);" id="job-mailing">Mailing</a>
+          </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" data-dismiss="modal" id="job-save">Save</button>
+        <button type="button" class="btn btn-primary job-save" data-dismiss="modal">Save</button>
       </div>
+
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->

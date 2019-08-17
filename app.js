@@ -87,9 +87,10 @@ If it is a new job @param _id is set to -1
 @param name, command, schedule, logging has to be sent with _id (if exists)
 */
 app.post(routes.save, function(req, res) {
+    req.body.timestamp = (new Date()).toString();
 	// new job
-	if(req.body._id == -1){
-		crontab.create_new(req.body.name, req.body.command, req.body.schedule, req.body.logging, req.body.mailing, req.body.stopped, req.body.remote, req.body.trigger);
+	if(req.body._id == "-1"){
+		crontab.create_new(req.body);
 	}
 	// edit job
 	else{
@@ -98,12 +99,6 @@ app.post(routes.save, function(req, res) {
 	res.end();
 });
 
-// set stop, start, etc on existing job
-app.post(routes.update, function(req, res) {
-    req.body.timestamp = (new Date()).toString();
-	crontab.update_unsecure(req.body);
-	res.end();
-});
 // set stop, start, etc on existing job
 app.post(routes.kill, function(req, res) {
     crontab.kill(req.body._id);

@@ -22,40 +22,14 @@ var cron_parser = require("cron-parser");
 exports.log_folder = __dirname + '/crontabs/logs';
 exports.env_file = __dirname + '/crontabs/env.db';
 
-crontab = function(name, command, schedule, stopped, logging, mailing, remote, trigger){
-	var data = {};
-	data.name = name;
-	data.command = command;
-	data.schedule = schedule;
-	if(stopped !== null) {
-		data.stopped = JSON.parse(stopped);
-	}
-	data.timestamp = (new Date()).toString();
-	data.logging = logging;
-	if (!mailing)
-		mailing = {};
-	data.mailing = mailing;
-    if (!remote)
-        remote = {};
-    data.remote = remote;
-    data.trigger = trigger;
-	return data;
-};
 
-exports.create_new = function(name, command, schedule, logging, mailing, stopped, remote, trigger){
-	var tab = crontab(name, command, schedule, stopped, logging, mailing, remote, trigger);
+exports.create_new = function(tab){
+	delete tab._id;
 	tab.created = new Date().valueOf();
 	db.insert(tab);
 };
 
 exports.update = function(data){
-	db.update({_id: data._id}, crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote, data.trigger));
-};
-
-exports.update_unsecure = function(data){
-	if ("stopped" in data) {
-        data.stopped = JSON.parse(data.stopped)
-	}
     db.update({_id: data._id}, {$set: data});
 };
 
@@ -69,7 +43,7 @@ exports.crontabs = function(callback){
 		for(var i=0; i<docs.length; i++){
 			if(docs[i].schedule == "@reboot")
 				docs[i].next = "Next Reboot";
-			else
+			else if (typeof(docs[i].schedule) != "undefined")
 				docs[i].next = cron_parser.parseExpression(docs[i].schedule).next().toString();
 		}
 		callback(docs);
