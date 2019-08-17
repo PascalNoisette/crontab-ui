@@ -4,7 +4,6 @@ exports.routes = {
 	"run" : "/runjob",
 	"hook" : "/hook",
 	"crontab" : "/crontab",
-	"update" : "/update",
 	"kill" : "/kill",
 	"remove": "/remove",
 	"backup": "/backup",

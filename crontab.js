@@ -27,28 +27,9 @@ var fs = require('fs');
 var cron_parser = require("cron-parser");
 
 
-crontab = function(name, command, schedule, stopped, logging, mailing, remote, trigger){
-	var data = {};
-	data.name = name;
-	data.command = command;
-	data.schedule = schedule;
-	if(stopped !== null) {
-		data.stopped = JSON.parse(stopped);
-	}
-	data.timestamp = (new Date()).toString();
-	data.logging = logging;
-	if (!mailing)
-		mailing = {};
-	data.mailing = mailing;
-    if (!remote)
-        remote = {};
-    data.remote = remote;
-    data.trigger = trigger;
-	return data;
-};
 
-exports.create_new = function(name, command, schedule, logging, mailing, stopped, remote, trigger){
-	var tab = crontab(name, command, schedule, stopped, logging, mailing, remote, trigger);
+exports.create_new = function(tab){
+	delete tab._id;
 	tab.created = new Date().valueOf();
 	tab.saved = false;
 	db.insert(tab);
@@ -68,6 +49,7 @@ exports.update_unsecure = function(data){
 	if ("stopped" in data) {
         data.stopped = JSON.parse(data.stopped)
 	}
+
     db.update({_id: data._id}, {$set: data});
 };
 

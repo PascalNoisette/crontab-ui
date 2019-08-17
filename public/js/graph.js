@@ -179,7 +179,7 @@ function putEvent(graph)
                         if (crontab.trigger.length == 0) {
                             crontab.trigger = "";
                         }
-                        $.post(routes.update, {_id: crontab._id, trigger: crontab.trigger}, function(){
+                        $.post(routes.save, {_id: crontab._id, trigger: crontab.trigger}, function(){
                             location.reload();
                         });
                         return;
@@ -202,7 +202,7 @@ function putEvent(graph)
                     crontab.trigger = [];
                 }
                 crontab.trigger.push(target.id);
-                $.post(routes.update, {_id: crontab._id, trigger: crontab.trigger}, function(){
+                $.post(routes.save, {_id: crontab._id, trigger: crontab.trigger}, function(){
                     location.reload();
                 });
                 return;
