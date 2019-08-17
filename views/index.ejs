@@ -89,11 +89,12 @@
 				<td class="col-lg-1"><%= crontab.command.split('\n')[0].substring(0,31) %></td>
 				<td><span style="cursor:pointer" data-toggle="tooltip" data-placement="bottom" title="<%= crontab.next %>"><%= crontab.schedule %></span></td>
 				<td style="width:20%" title="<%= crontab.timestamp %>"><%= moment(new Date(crontab.timestamp)).fromNow() %></td>
-				<td style="width:20%" title="<%= crontab.executed %>"><% if (crontab.executed) { %><%= moment(new Date(crontab.executed)).fromNow() %><% } %><% if (crontab.code!=0) {%> (code <%= crontab.code %>)<% } %></td>
+				<td style="width:20%" title="<%= crontab.executed %>"><% if (crontab.pid) {%> Running (Pid <%= crontab.pid %>)<% } else if (crontab.executed) { %><%= moment(new Date(crontab.executed)).fromNow() %><% if (crontab.code!=0) {%> (code <%= crontab.code %>)<% } %><% } %></td>
 				<td>
 
 		<!-- controls based on crontab state -->
 		<% if (!crontab.stopped) { %>
+
 			<% if (crontab.logging && crontab.logging != "false") {%>
 					<a class="btn btn-primary btn-danger" data-toggle="tooltip" data-placement="left" title="stderr" href="<%= JSON.parse(routes).logger + '?id=' + crontab._id %>" target="_blank"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span></a>
 					<a class="btn btn-primary" data-toggle="tooltip" data-placement="left" title="stdout" href="<%= JSON.parse(routes).stdout + '?id=' + crontab._id %>" target="_blank"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span></a>
@@ -101,6 +102,14 @@
 					<a class="btn btn-info" onclick="runJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Run now</a>
 					<a class="btn btn-primary" onclick="editJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit</a>
 					<a class="btn btn-info" onclick="stopJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Disable</a>
+
+					<% if (crontab.pid) { %>
+					<a class="btn btn-info" onclick="killJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Kill</a>
+					<% } else { %>
+					<a class="btn btn-info" onclick="runJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Run</a>
+					<% }; %>
+					<a class="btn btn-info" onclick="stopJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop</a>
+
 		<% } else { %>
 					<a class="btn btn-info" onclick="startJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Enable</a>
 		<% } %>
