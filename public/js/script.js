@@ -110,8 +110,8 @@ function editJob(_id){
 	});
 	if(job){
         $("#job_form").values(job);
-		if (job.mailing) {
-			$("#job-mailing").attr("data-json", JSON.stringify(job.mailing));
+		if (job.mailling) {
+			$("#job-mailling").attr("data-json", JSON.stringify(job.mailling));
 		}
 
         toggleRemote();
@@ -130,7 +130,7 @@ function newJob(){
 	$(".job-save").unbind("click"); // remove existing events attached to this
 	$(".job-save").click(function(){
 		let data = $("#job_form").values();
-        data.mailling = JSON.parse($("#job-mailing").attr("data-json"));
+        data.mailling = JSON.parse($("#job-mailling").attr("data-json"));
 		$.post(routes.save, data, function(){
 			location.reload();
 		});
