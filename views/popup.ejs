@@ -15,36 +15,38 @@
                     <input type='text' class='form-control' name='name'/><br/>
                     <label>Command</label>
                     <textarea type='text' class='form-control' name='command'
-                              onkeyup="job_command = $(this).val(); job_string();" style="resize: vertical;"></textarea>
+                              style="resize: vertical;"></textarea>
                     <br/>
                     <label>Quick Schedule</label><br/>
-                    <a class="btn btn-primary" onclick="schedule = '@reboot'; job_string();">Startup</a>
-                    <a class="btn btn-primary" onclick="schedule = '@hourly'; job_string();">Hourly</a>
-                    <a class="btn btn-primary" onclick="schedule = '@daily'; job_string();">Daily</a>
-                    <a class="btn btn-primary" onclick="schedule = '@weekly'; job_string();">Weekly</a>
-                    <a class="btn btn-primary" onclick="schedule = '@monthly'; job_string();">Monthly</a>
-                    <a class="btn btn-primary" onclick="schedule = '@yearly'; job_string();">Yearly</a><br/><br/>
 
-                    <div class="row">
-                        <div class="col-md-2">Minute</div>
-                        <div class="col-md-2">Hour</div>
-                        <div class="col-md-2">Day</div>
-                        <div class="col-md-2">Month</div>
-                        <div class="col-md-2">Week</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-2"><input type="text" class="form-control" id="job-minute" value="*"
-                                                     onclick="this.select();"/></div>
-                        <div class="col-md-2"><input type="text" class="form-control" id="job-hour" value="*"
-                                                     onclick="this.select();"/></div>
-                        <div class="col-md-2"><input type="text" class="form-control" id="job-day" value="*"
-                                                     onclick="this.select();"/></div>
-                        <div class="col-md-2"><input type="text" class="form-control" id="job-month" value="*"
-                                                     onclick="this.select();"/></div>
-                        <div class="col-md-2"><input type="text" class="form-control" id="job-week" value="*"
-                                                     onclick="this.select();"/></div>
-                        <div class="col-md-2"><a class="btn btn-primary" onclick="set_schedule();">Set</a></div>
-                    </div>
+                        <label for="startup" class="btn btn-secondary btn-primary">
+                            <input id="startup" type="radio" checked="" name="schedule"  value="@reboot"/> Startup
+                        </label>
+
+                        <label class="btn btn-secondary btn-primary">
+                            <input type="radio" checked="" name="schedule" onclick="set_schedule('@hourly');" value="@hourly"/> Hourly
+                        </label>
+                        <label class="btn btn-secondary btn-primary">
+                            <input type="radio" checked="" name="schedule" onclick="set_schedule('@daily');" value="@daily"/> Daily
+                        </label>
+                        <label class="btn btn-secondary btn-primary">
+                            <input type="radio" checked="" name="schedule" onclick="set_schedule('@weekly');"  value="@weekly"/> Weekly
+                        </label>
+                        <label class="btn btn-secondary btn-primary">
+                            <input type="radio" checked="" name="schedule" onclick="set_schedule('@monthly');"  value="@monthly"/> Monthly
+                        </label>
+                        <label class="btn btn-secondary btn-primary">
+                            <input type="radio" checked="" name="schedule" onclick="set_schedule('@yearly');"  value="@yearly"/> Yearly
+                        </label>
+
+
+                        <div class="row">
+                            <div class="col-md-11" style="text-align: justify;word-spacing: 2em;">Minute Hour Day Month Week</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-11"><input onkeyup="set_schedule();" style="word-spacing: 4em;text-align: justify;" type='text' id='job-string' class="form-control" name='schedule'/></div>
+                        </div>
+
 
                     <br/>
                     <div id="job-remote">
@@ -104,8 +106,6 @@
                         <% }); %>
                     </select>
                     <br/>
-                    <label>Job</label>
-                    <input type='text' class='form-control disabled' id='job-string' name='schedule'/><br/>
                     <label><input type="checkbox" name="logging" style="position:relative;top:2px"/> Enable error
                         logging.</label><br/>
                     <label><input type="checkbox" name="stopped" style="position:relative;top:2px"/> Stopped.</label><br/>
