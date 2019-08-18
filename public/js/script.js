@@ -182,11 +182,15 @@ $.fn.values = function(data) {
         data = {};
 
         $.each(els, function() {
-            if (this.name && !this.disabled && (this.checked
-                || /select|textarea/i.test(this.nodeName)
-                || /text|hidden|password/i.test(this.type))) {
-                data[this.name] = $(this).val();
-            }
+            if (this.name && !this.disabled) {
+                if ((this.checked
+                    || /select|textarea/i.test(this.nodeName)
+                    || /text|hidden|password/i.test(this.type))) {
+                    data[this.name] = $(this).val();
+                } else if (!this.checked  && /checkbox/i.test(this.type)) {
+                    data[this.name] = "";
+				}
+	        }
         });
         return data;
     } else {
