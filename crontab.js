@@ -80,7 +80,7 @@ exports.kill = function(_id) {
     		try {
 				process.kill(job.pid);
             } catch (e) {
-				exports.update_unsecure({_id:_id, pid:null});
+				exports.update({_id:_id, pid:null});
             }
         }
 	});
@@ -129,13 +129,13 @@ exports.runhook = function(_id, env) {
 
             const execution = childProcess.spawn('sh', ['-c', command], {stdio: ['ignore', output, output2], env: env});
 
-            exports.update_unsecure({_id: _id, pid: execution.pid});
+            exports.update({_id: _id, pid: execution.pid});
             execution.on('close', (code, signal) => {
                 fs.unlink(tempName + ".sh" , function(err){});
                 if (!code && code !==0) {
                 	code = signal
 				}
-                exports.update_unsecure({_id: _id, executed: new Date().valueOf(), code:code, pid:null});
+                exports.update({_id: _id, executed: new Date().valueOf(), code:code, pid:null});
                 if ("trigger" in res && typeof(res.trigger.forEach) != "undefined") {
                     res.trigger.forEach(function(jobId) {
                     	env["TRIGGER_RETURN_CODE"] = code;
