@@ -223,8 +223,8 @@ exports.set_crontab = function(env_vars, callback) {
 			crontab_string += "\n";
 		}
 		tabs.forEach(function(tab){
-			if(!tab.stopped) {
 
+			if(!tab.stopped) {
 				let stderr = path.join(cronPath, tab._id + ".stderr");
 				let stdout = path.join(cronPath, tab._id + ".stdout");
 				let command  = "/usr/bin/curl 127.0.0.1:8000/hook/?id=" + tab._id;
