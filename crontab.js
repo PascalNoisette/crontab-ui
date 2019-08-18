@@ -35,6 +35,7 @@ exports.create_new = function(tab){
 	db.insert(tab);
 };
 
+
 exports.update = function(data){
 	var tab = crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote, data.trigger);
 	tab.saved = false;
@@ -51,6 +52,16 @@ exports.update_unsecure = function(data){
 	}
 
     db.update({_id: data._id}, {$set: data});
+};
+
+exports.update = function(data) {
+    let unset = {};
+    if (data['$unset']) {
+        unset = data['$unset'];
+        delete data['$unset'];
+    }
+
+	db.update({_id: data._id}, {$set: data, $unset: unset});
 };
 
 exports.remove = function(_id){
