@@ -116,7 +116,6 @@ function editJob(_id){
 		}
 
         toggleRemote();
-        job_string();
 	}
 
 }
@@ -129,7 +128,6 @@ function newJob(){
     $('body').append(modalHTML);
     $("#job").modal("show");
     toggleRemote();
-	job_string();
 	$(".job-save").unbind("click"); // remove existing events attached to this
 	$(".job-save").click(function(){
 		let data = $("#job_form").values();
@@ -312,14 +310,12 @@ function toggleRemote() {
     });
 }
 
-// script corresponding to job popup management
-function job_string(){
-	$("#job-string").val(schedule + " " + job_command);
-	return schedule + " " + job_command;
-}
 
-function set_schedule(){
-	schedule = $("#job-minute").val() + " " +$("#job-hour").val() + " " +$("#job-day").val() + " " +$("#job-month").val() + " " +$("#job-week").val();
-	job_string();
+function set_schedule(schedule){
+	if (!schedule) {
+		$("input[type=radio][name=schedule]").prop("checked", false);
+	} else {
+		$("input[type=text][name=schedule]").val(schedule);
+    }
 }
 // popup management ends
