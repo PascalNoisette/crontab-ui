@@ -113,7 +113,7 @@ exports.runhook = function(_id, env) {
     db.find({_id: _id}).exec(function(err, docs){
         var res = docs[0];
 
-        if (typeof(res) != "undefined" && !res.pid) {
+        if (typeof(res) != "undefined" && !res.pid && !res.stopped) {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
             var tempName = temp.path();
