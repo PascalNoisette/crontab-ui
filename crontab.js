@@ -120,9 +120,9 @@ exports.runhook = function(_id, env) {
             );
 
             if ("remote" in res) {
-                if ("ssh" in res.remote && res.remote.ssh.enabled == "on") {
+                if (res.remote_ssh_enabled == "on") {
                     command = "ssh -o \"BatchMode=yes\" -o \"StrictHostKeyChecking=no\" " + res.remote.ssh.server + " -p " +  res.remote.ssh.port + " " + command;
-                } else if ("docker" in res.remote && res.remote.docker.enabled == "on") {
+                } else if ("docker" in res.remote && res.remote_docker_enabled == "on") {
                     command = "/usr/bin/docker run -i --rm " + res.remote.docker.image + " " + command;
                 }
             }
