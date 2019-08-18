@@ -63,7 +63,7 @@ function killJob(_id) {
 
 function startJob(_id){
 	messageBox("<p> Do you want to start this Job? </p>", "Confirm start job", null, null, function(){
-		$.post(routes.save, {_id: _id, stopped: false}, function(){
+		$.post(routes.save, {_id: _id, '$unset':{'stopped': true}}, function(){
 			location.reload();
 		});
 	});
