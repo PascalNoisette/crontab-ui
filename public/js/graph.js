@@ -106,14 +106,14 @@ function getPool(graph, crontab) {
 function getPoolName(crontab)
 {
     if ("remote" in crontab) {
-        if ("ssh" in crontab.remote && crontab.remote.ssh.enabled=="on") {
+        if (crontab.remote_ssh_enabled=="on") {
             var name = crontab.remote.ssh.server;
             if (/@/.test(name)) {
                 name = crontab.remote.ssh.server.split("@")[1];
             }
             return name.substring(0,15);
         }
-        if ("docker" in crontab.remote && crontab.remote.docker.enabled=="on") {
+        if (crontab.remote_docker_enabled=="on") {
             return crontab.remote.docker.image.substring(0,15);
         }
     }
