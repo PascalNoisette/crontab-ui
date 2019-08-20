@@ -14,8 +14,8 @@ RUN   apk --no-cache add \
       wget \
       curl \
       nodejs \
-      npm \
-      docker \
+      nodejs-npm \
+      docker-cli \
       openssh-client \
       ca-certificates \
       bash \
