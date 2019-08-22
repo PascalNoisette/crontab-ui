@@ -120,15 +120,41 @@ const flattenObject = (obj, prefix = '') =>
         return acc;
     }, {});
 
+
+function withUpload(req, res, callback) {
+    crontab.get_crontab(req.query.id, function (res){
+        var uploads = {};
+
+		if (res && res.with_upload && req.busboy) {
+			var fstream;
+			req.pipe(req.busboy);
+			req.busboy.on('file', function (fieldname, file, filename) {
+				uploads[fieldname] = filename;
+				targetDir = __dirname + '/workspace/uploads/';
+				fs.mkdirSync(targetDir, { recursive: true });
+				fstream = fs.createWriteStream(targetDir + filename);
+				file.pipe(fstream);
+			});
+			req.busboy.on('finish', function() {
+				callback(uploads);
+			});
+		} else {
+			callback(uploads);
+		}
+    })
+}
+
 // run a job by http request
 app.all(routes.hook, function(req, res) {
-	var env = [process.env, req.query, flattenObject(req.body)].reduce(function (env, current) {
-		if (typeof(current) != "undefined")
-        	Object.assign(env, current)
-		return env;
-    }, {});
-    crontab.runhook(req.query.id, env);
-    res.end();
+    withUpload(req, res, function (uploads) {
+		var env = [process.env, req.query, flattenObject(req.body), uploads].reduce(function (env, current) {
+			if (typeof(current) != "undefined")
+				Object.assign(env, current)
+			return env;
+		}, {});
+		crontab.runhook(req.query.id, env);
+		res.end();
+	});
 });
 // set crontab. Needs env_vars to be passed
 app.get(routes.crontab, function(req, res, next) {
