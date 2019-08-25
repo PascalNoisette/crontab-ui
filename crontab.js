@@ -117,8 +117,9 @@ exports.runhook = function(_id, env) {
             var output = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'w');
             var output2 = fs.openSync(path.join(exports.log_folder, _id + ".log"), 'a');
             var tempName = temp.path();
+            childProcess.execSync("export -p > " + tempName+ ".sh\n", {env: env});
             var command = "sh -s < " + tempName + ".sh";
-            fs.writeFileSync(
+            fs.appendFileSync(
                 tempName+ ".sh",
                 "cat << EOF > " + tempName + "\n" +
                 res.command                + "\n" +
