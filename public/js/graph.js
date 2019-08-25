@@ -25,6 +25,7 @@ function loadGraphFromCrontabs(container, crontabs)
         graph.setConnectable(true);
         putStyle(graph);
         putEvent(graph);
+        putControls(graph);
 
         // Enables rubberband selection
         new mxRubberband(graph);
@@ -120,6 +121,133 @@ function getPoolName(crontab)
     return "local";
 }
 
+function putControls(graph)
+{
+
+
+    // Specifies the URL and size of the new control
+    var controls = {
+        "startControl" : {
+            "image": new mxImage('images/submenu.gif', 16, 16),
+            "condition" : function (graph, cell) {
+                let running = false;
+                let stopped = false;
+                let name = "";
+                crontabs.forEach(function(crontab) {
+                    if (crontab._id==cell.id) {
+                        running = crontab.pid !== null;
+                        stopped = crontab.stopped === "true";
+                        return;
+                    }
+                });
+                return cell.style != mxConstants.SHAPE_SWIMLANE
+                    && graph.getModel().isVertex(cell)
+                    && !running
+                    && !stopped;
+            },
+            "behavior": function (graph, state)
+            {
+                return function (evt) {
+                    if (graph.isEnabled())
+                    {
+                        runJob(state.cell.id);
+                        graph.selectCellForEvent(state.cell, evt);
+                        mxEvent.consume(evt);
+                    }
+                };
+            }
+        }
+    };
+
+    // Overridden to add an additional control to the state at creation time
+    mxCellRendererCreateControl = mxCellRenderer.prototype.createControl;
+    mxCellRenderer.prototype.createControl = function(state)
+    {
+        mxCellRendererCreateControl.apply(this, arguments);
+
+        var graph = state.view.graph;
+
+        for (let control in controls) {
+            if (controls[control].condition(graph, state.cell))
+            {
+                if (state[control] == null)
+                {
+                    var b = new mxRectangle(0, 0, controls[control].image.width, controls[control].image.height);
+                    state[control] = new mxImageShape(b, controls[control].image.src);
+                    state[control].dialect = graph.dialect;
+                    state[control].preserveImageAspect = false;
+
+                    this.initControl(state, state[control], false, controls[control].behavior(graph, state));
+                }
+            }
+            else if (state[control] != null)
+            {
+                state[control].destroy();
+                state[control] = null;
+            }
+        }
+    };
+
+    // Helper function to compute the bounds of the control
+    var getControlBounds = function(state, control, index)
+    {
+        if (state[control] != null)
+        {
+            var oldScale = state[control].scale;
+            var w = state[control].bounds.width / oldScale;
+            var h = state[control].bounds.height / oldScale;
+            var s = state.view.scale;
+
+            return (state.view.graph.getModel().isEdge(state.cell)) ?
+                new mxRectangle(state.x + state.width / 2 - w / 2 * s ,
+                    state.y + state.height / 2 - h / 2 * s, w * s, h * s)
+                : new mxRectangle(state.x + state.width - w * s - w*index,
+                    state.y, w * s, h * s);
+        }
+
+        return null;
+    };
+
+    // Overridden to update the scale and bounds of the control
+    mxCellRendererRedrawControl = mxCellRenderer.prototype.redrawControl;
+    mxCellRenderer.prototype.redrawControl = function(state)
+    {
+        mxCellRendererRedrawControl.apply(this, arguments);
+
+
+        var index = 0;
+        for (var control in controls) {
+            if (state[control] != null)
+            {
+                var bounds = getControlBounds(state, control, index++);
+                var s = state.view.scale;
+
+                if (state[control].scale != s || !state[control].bounds.equals(bounds))
+                {
+                    state[control].bounds = bounds;
+                    state[control].scale = s;
+                    state[control].redraw();
+                }
+            }
+        }
+    };
+
+    // Overridden to remove the control if the state is destroyed
+    mxCellRendererDestroy = mxCellRenderer.prototype.destroy;
+    mxCellRenderer.prototype.destroy = function(state)
+    {
+        mxCellRendererDestroy.apply(this, arguments);
+
+        for (var control in controls) {
+            if (state[control] != null)
+            {
+                state[control].destroy();
+                state[control] = null;
+            }
+        }
+    };
+
+}
 function putStyle(graph)
 {
     style = [];
@@ -140,8 +268,33 @@ function putStyle(graph)
     graph.getStylesheet().putCellStyle(mxConstants.SHAPE_SWIMLANE, style);
 }
 
+function selectCorrepondingRow(cell) {
+    var correspondingRow = $("[data-original-title=\"" + cell.id + "\"]").parents("tr")[0];
+    if (correspondingRow)
+        correspondingRow.classList.add("graph-selected");
+}
+
 function putEvent(graph)
 {
+
+
+    var style = document.createElement('style');
+    style.innerHTML =
+        '.graph-selected {' +
+        '    background-color: #00ff00 !important;'
+        '}';
+    document.body.appendChild(style);
+
+    graph.getSelectionModel().addListener(mxEvent.CHANGE, function(sender, evt)
+    {
+        var cells = evt.getProperty('removed');
+        $("tr").each(function (f, e) {e.classList.remove("graph-selected")})
+        if (cells)
+            for (var i = 0; i < cells.length; i++)
+            {
+                selectCorrepondingRow(cells[i])
+            }
+    });
 
     graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt)
     {
@@ -151,13 +304,8 @@ function putEvent(graph)
 
         if (cell != null)
         {
-            crontabs.forEach(function(crontab) {
-                if (cell.id == crontab._id) {
-                    editJob(crontab._id);
-                    evt.consume();
-                    return;
-                }
-            });
+            editJob(cell.id);
+            evt.consume();
         }
 
 
