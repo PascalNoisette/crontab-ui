@@ -135,7 +135,7 @@ function putControls(graph)
                 let name = "";
                 crontabs.forEach(function(crontab) {
                     if (crontab._id==cell.id) {
-                        running = crontab.pid !== null;
+                        running = "pid" in crontab && crontab.pid !== null;
                         stopped = crontab.stopped === "true";
                         return;
                     }
