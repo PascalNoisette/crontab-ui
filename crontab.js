@@ -70,6 +70,7 @@ exports.remove = function(_id){
 
 // Iterates through all the crontab entries in the db and calls the callback with the entries
 exports.crontabs = function(callback){
+
 	db.find({}).sort({ created: -1 }).exec(function(err, docs){
 		for(var i=0; i<docs.length; i++){
 			if(docs[i].schedule == "@reboot")
@@ -82,7 +83,9 @@ exports.crontabs = function(callback){
 					docs[i].next = "invalid";
 				}
 		}
-		callback(docs);
+		exports.verify_crontab_is_sync(docs, function (syncdocs) {
+			callback(docs);
+		})
 	});
 };
 exports.kill = function(_id) {
@@ -224,8 +227,7 @@ exports.set_crontab = function(env_vars, callback) {
 			crontab_string += "\n";
 		}
 		tabs.forEach(function(tab){
-
-			if(!tab.stopped) {
+			if(!tab.stopped && tab.schedule && tab.sync != false) {
 				let stderr = path.join(cronPath, tab._id + ".stderr");
 				let stdout = path.join(cronPath, tab._id + ".stdout");
 				let command  = "/usr/bin/curl 127.0.0.1:8000/hook/?id=" + tab._id;
@@ -321,6 +323,55 @@ exports.get_env = function(){
 	return "";
 };
 
+
+exports.verify_crontab_is_sync = function(docs, callback){
+	exec("crontab -l", function(error, stdout, stderr){
+		var lines = stdout.split("\n");
+		var namePrefix = new Date().getTime();
+		var docsFromCrontab = [];
+
+		lines.forEach(function(line, index){
+			line = line.replace(/\t+/g, ' ');
+			var regex = /^((\@[a-zA-Z]+\s+)|(([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+))/;
+			var command = line.replace(regex, '').trim();
+			var schedule = line.replace(command, '').trim();
+
+			if (command && schedule) {
+
+				var sync = false;
+				var is_valid = false;
+
+				for(var i=0; i<docs.length; i++) {
+
+					if((command.match(docs[i]._id) || command==docs[i].command) && docs[i].schedule==schedule) {
+						docs[i].sync = true;
+						sync = true;
+						break;
+					} else if(command.match(docs[i]._id) || command==docs[i].command) {
+						docs[i].desync = schedule;
+						sync = true;
+						break;
+					}
+				}
+
+				try { is_valid = cron_parser.parseString(line).expressions.length > 0; } catch (e){console.log(e);}
+				is_valid = is_valid || command.match("/usr/bin/curl 127.0.0.1:8000/hook/");
+				if (!sync && is_valid) {
+					var doc = {};
+					doc.name=namePrefix + '_' + index;
+					doc.command = command;
+					doc.schedule = schedule;
+					doc.sync = false;
+					doc.is_valid = is_valid;
+					docsFromCrontab.push(doc);
+				}
+			}
+		});
+		docsFromCrontab.forEach(function(e){docs.push(e)});
+		callback(docs);
+	});
+};
+
 exports.import_crontab = function(){
 	exec("crontab -l", function(error, stdout, stderr){
 		var lines = stdout.split("\n");
@@ -343,7 +394,7 @@ exports.import_crontab = function(){
 						throw err;
 					}
 					if(!doc){
-						exports.create_new(name, command, schedule, false, {}, false, {});
+						exports.create_new({name:name, command:command, schedule:schedule});
 					} else if(command.match("/usr/bin/curl 127.0.0.1:8000/hook")){
                         doc.schedule = schedule;
                         exports.update(doc);

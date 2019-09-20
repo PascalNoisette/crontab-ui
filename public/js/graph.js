@@ -132,18 +132,21 @@ function putControls(graph)
             "condition" : function (graph, cell) {
                 let running = false;
                 let stopped = false;
+                let sync    = false;
                 let name = "";
                 crontabs.forEach(function(crontab) {
                     if (crontab._id==cell.id) {
                         running = "pid" in crontab && crontab.pid !== null;
                         stopped = crontab.stopped === "true";
+                        sync = crontab.sync != false;
                         return;
                     }
                 });
                 return cell.style != mxConstants.SHAPE_SWIMLANE
                     && graph.getModel().isVertex(cell)
                     && !running
-                    && !stopped;
+                    && !stopped
+                    && sync;
             },
             "behavior": function (graph, state)
             {

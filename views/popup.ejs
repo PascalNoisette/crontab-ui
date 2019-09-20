@@ -96,6 +96,7 @@
                     <label>Trigger other jobs</label><br/>
                     <select name='trigger' value="" multiple>
                         <% JSON.parse(crontabs).forEach(function(crontab){ %>
+                        <% if (crontab._id) { %>
                         <option value="<%= crontab._id %>">
                             <% if (crontab.name) { %>
                             <%= crontab.name %>
@@ -103,6 +104,7 @@
                             <%= crontab._id %>
                             <% } %>
                         </option>
+                        <% } %>
                         <% }); %>
                     </select>
                     <br/>
