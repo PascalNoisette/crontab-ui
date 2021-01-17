@@ -21,7 +21,7 @@ RUN   apk --no-cache add \
       bash \
       supervisor
 
-COPY ./package.json ./package-lock.json /crontab-ui/
+COPY ./package.json /crontab-ui/
 
 RUN   npm install
 
