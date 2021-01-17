@@ -250,14 +250,6 @@ app.get(routes.get_ssh_key, function(req, res) {
     res.download(dest + file + ".pub");
 });
 
-// get the log file a given job. id passed as query param
-app.get(routes.logger, function(req, res) {
-	_file = crontab.log_folder +"/"+req.query.id+".log";
-	if (fs.existsSync(_file))
-		res.sendFile(_file);
-	else
-		res.end("No errors logged yet");
-});
 
 // get the log file a given job. id passed as query param
 app.get(routes.logger, function(req, res) {
