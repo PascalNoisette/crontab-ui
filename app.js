@@ -63,7 +63,7 @@ app.get(routes.root, function(req, res) {
   // reload the database before rendering
 	crontab.reload_db();
 	// send all the required parameters
-	crontab.crontabs( function(docs){
+	crontab.crontabs(function(docs){
 		res.render('index', {
 			routes : JSON.stringify(routes_relative),
 			crontabs : JSON.stringify(docs),

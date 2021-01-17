@@ -10,9 +10,16 @@
             </div>
             <div class="modal-body" id="job-body">
                 <form id="job_form">
-                    <label>Name (Optional)</label>
                     <input type='hidden' class='form-control' name='_id' value="-1"/><br/>
-                    <input type='text' class='form-control' name='name'/><br/>
+                    <div class="form-group row">
+                    <span  class="col-xs-6">
+                    <label>Name (Optional)</label>
+                    <input type='text' class='form-control col-xs-5' name='name'/>
+                    </span>
+                    <span  class="col-xs-4">
+                    <label>Project  (Optional)</label>
+                    <input type='text' class='form-control col-xs-3' name='project'/></span>
+                    </div>
                     <label>Command</label>
                     <textarea type='text' class='form-control' name='command'
                               style="resize: vertical;"></textarea>

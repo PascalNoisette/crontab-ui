@@ -26,6 +26,15 @@
 	    <% } %>
           </ul>
         </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Projects <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+              <li><a class="dropdown-filter-project" href="">All</a></li>
+	    	<% JSON.parse(crontabs).reduce((res, c) => res.add(c.project), new Set()).forEach(function(file){  %>
+            		<li><a class="dropdown-filter-project" href="#<%= file %>"><%= file %></a></li>
+	    	<% }) %>
+          </ul>
+        </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href="https://github.com/alseambusher/crontab-ui">Fork me on Github</a></li>

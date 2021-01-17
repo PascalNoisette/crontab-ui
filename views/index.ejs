@@ -51,6 +51,7 @@
 		<th>#</th>
 		<th>Name</th>
 		<th>Job</th>
+		<th  style="display: none;">Project</th>	
 		<th>Time</th>
 		<th>Last Modified</th>
 		<th>Last Executed</th>
@@ -87,6 +88,11 @@
 					<% } %>
 				</td>
 				<td class="col-lg-1"><%= crontab.command.split('\n')[0].substring(0,31) %></td>
+				<td style="display: none;">
+					<% if (crontab.project) { %>
+						<%= crontab.project %>
+					<% } %>
+				</td>
 				<td>
                     <% if (typeof(crontab.sync) != "undefined") { %>
                     <span style="cursor:pointer" data-toggle="tooltip" data-placement="bottom" title="<%= crontab.next %>"><%= crontab.schedule %></span>
@@ -125,8 +131,9 @@
             		<a class="btn btn-primary" onclick="editJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit</a>
 					<a class="btn btn-danger" onclick="deleteJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
 					<a class="btn btn-info" onclick="hookJob('<%= crontab._id %>')"><span class="glyphicon glyphicon-share" aria-hidden="true"></span></a>
-				</td>
+				
 	<% } %>
+				</td>
 			</tr>
 	<% }); %>
 
@@ -137,21 +144,37 @@
 <%- include('popup.ejs'); %>
 <script>
    jQuery(function($) {
-   	$('#main_table').DataTable({
-   		order: [1, 'asc'],
-   		columns: [
-   			{orderable: false},
-   			null,
-   			null,
-   			null,
-   			null,
-   			{orderable: false},
-   			{orderable: false}
-   		],
-        	stateSave: true,
-        	stateDuration: 0
-  	});
-   });
+		$.fn.dataTable.ext.search.push(function( settings, data, dataIndex ) {
+			var hash = window.location.hash;
+			var project = '#' + data[3];
+			if (typeof(hash) == "undefined" || hash.length==0 || project==hash)
+			{
+				return true;
+			}
+			return false;
+		});
+		
+
+		var table = $('#main_table').DataTable({
+			order: [1, 'asc'],
+			columns: [
+				{orderable: false},
+				null,
+				null,
+				null,
+				null,
+				null,
+				{orderable: false},
+				{orderable: false}
+			],
+			stateSave: true,
+			stateDuration: 0
+		});
+			
+
+		$(window).on('hashchange', function(){table.draw();})
+	});
+	
  </script>
 </body>
 </html>

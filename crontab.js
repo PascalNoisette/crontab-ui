@@ -37,7 +37,7 @@ exports.create_new = function(tab){
 
 
 exports.update = function(data){
-	var tab = crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote, data.trigger);
+	var tab = crontab(data.name, data.command, data.schedule, JSON.parse(data.stopped), data.logging, data.mailing, data.remote, data.trigger, data.project);
 	tab.saved = false;
 	db.update({_id: data._id}, tab);
 };

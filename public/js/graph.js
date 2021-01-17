@@ -26,6 +26,7 @@ function loadGraphFromCrontabs(container, crontabs)
         putStyle(graph);
         putEvent(graph);
         putControls(graph);
+        putFilter(graph, crontabs);
 
         // Enables rubberband selection
         new mxRubberband(graph);
@@ -54,6 +55,7 @@ function loadGraphFromCrontabs(container, crontabs)
                     });
                 }
             });
+            applyFilter(graph, crontabs);
             alignPools(graph, parent);
         } catch (e) {
             console.error(e);
@@ -359,6 +361,26 @@ function putEvent(graph)
                 return;
             }
         });
+    });
+
+}
+
+
+function applyFilter(graph, crontabs) {
+    var hash = window.location.hash;
+    crontabs.forEach(function(crontab) {
+        let visible = true;
+        if (typeof(hash) != "undefined" && hash.length>0 && "#" + crontab.project != hash) {
+            visible = false;
+        }
+        let cell = graph.getModel().getCell(crontab._id);
+        graph.toggleCells(visible, [cell], true);
+        graph.toggleCells(graph.getChildVertices(cell.parent).length, [cell.parent], true);
+    });
+}
+function putFilter(graph, crontabs) {
+    $(window).on('hashchange', function(){
+        applyFilter(graph, crontabs);
     });
 
 }
