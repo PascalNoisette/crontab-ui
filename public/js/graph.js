@@ -4,10 +4,10 @@
 
 var JOB_WIDTH = 80;
 var JOB_HEIGHT = 100;
-var JOB_SPACER = 20;
-var POOL_LANE_LENGTH = 640;
+var JOB_SPACER = 25;
+var POOL_LANE_LENGTH = 80/100 * window.innerWidth;
 
-function loadGraphFromCrontabs(container, crontabs)
+function loadGraphFromCrontabs(container, crontabs, routes)
 {
     // Checks if the browser is supported
     if (!mxClient.isBrowserSupported())
@@ -25,7 +25,7 @@ function loadGraphFromCrontabs(container, crontabs)
         graph.setConnectable(true);
         putStyle(graph);
         putEvent(graph);
-        putControls(graph);
+        putControls(graph, routes);
         putFilter(graph, crontabs);
 
         // Enables rubberband selection
@@ -43,8 +43,15 @@ function loadGraphFromCrontabs(container, crontabs)
         try
         {
 
+            graph.setAllowDanglingEdges(false);
+            graph.setDisconnectOnMove(false);
+
             crontabs.forEach(function(crontab) {
-                graph.insertVertex(getPool(graph, crontab), crontab._id, crontab.name, 0, 0, JOB_WIDTH, JOB_HEIGHT);
+                let stylesclasses = "";
+                if (crontab.code) {
+                    stylesclasses += "returncode";
+                }
+                graph.insertVertex(getPool(graph, crontab), crontab._id, crontab.name, 0, 0, JOB_WIDTH, JOB_HEIGHT, stylesclasses);
             });
             crontabs.forEach(function(sourceJob) {
                 if ("trigger" in sourceJob && sourceJob.trigger.forEach) {
@@ -69,31 +76,49 @@ function loadGraphFromCrontabs(container, crontabs)
 };
 
 function alignPools(graph, root) {
-    alignChildren(graph, graph.getModel().getChildren(root), 0, 0, 0, JOB_HEIGHT + JOB_SPACER, alignJob);
+    alignChildren(graph, graph.getModel().getChildVertices(root), 0, 0, 0, JOB_HEIGHT + JOB_SPACER, alignJob);
 }
 function alignJob(graph, onePool) {
-    if (graph.getModel().getChildren(onePool)) {
-        alignChildren(graph, graph.getModel().getChildren(onePool), JOB_SPACER, 0, JOB_HEIGHT, 0, function(){});
-        graph.getModel().getChildren(onePool).map(job=>graph.getModel().getEdges(job).map(edge=>swatchEdgeTarget(graph, edge)))
+
+    if (graph.getModel().getChildVertices(onePool)) {
+        graph.getModel().getChildVertices(onePool).map(node=>moveNodeUnderParent(node, graph));
+        alignChildren(graph, graph.getModel().getChildVertices(onePool), JOB_SPACER, 0, JOB_SPACER+JOB_HEIGHT, 0, function(){});
     }
 }
-function swatchEdgeTarget(graph, edge) {
-    var position = edge.target.geometry.x - edge.source.geometry.x;
-    if (position<=0 ) {
-        if (edge.target.parent.id == edge.source.parent.id) {
-            graph.moveCells([edge.source], position, 0, false);
-        } else {
-            position -= JOB_HEIGHT;
+function moveNodeUnderParent(node, graph) {
+    var nodeConnection = 0;
+    graph.getModel().getEdges(node).forEach(function(edge) {
+        if (edge.source.id == node.id) {
+            nodeConnection++;
+            var position = edge.target.geometry.x - edge.source.geometry.x + 2*JOB_SPACER;
+            var offset = nodeConnection*2*JOB_SPACER;
+            if (position<=offset ) {
+                let toOffet = offset-position;
+                edge.target.alreadyOffset = offset;
+                graph.moveCells([edge.target], toOffet, 0, false);
+            }
         }
-        graph.moveCells([edge.target], -position, 0, false);
-    }
+    });
 }
 function alignChildren(graph, children, x, y, xOffset, yOffset, childrenCallback) {
     if (children) {
+        let previousCell = null;
         children.forEach(function (cell){
-            graph.moveCells([cell], x, y, false);
-            x += xOffset;
-            y += yOffset;
+            if (previousCell == null) {
+                previousCell = cell;
+                childrenCallback(graph, cell);
+                return;
+            }
+            if (typeof(cell.alreadyOffset) == "undefined") {
+                cell.alreadyOffset=0;
+            }
+            graph.moveCells(
+                [cell], 
+                Math.max(0,previousCell.geometry.x-cell.geometry.x+xOffset+x-cell.alreadyOffset), 
+                Math.max(0, previousCell.geometry.y-cell.geometry.y+yOffset+y),
+                false
+            );
+            previousCell = cell;
             childrenCallback(graph, cell);
         });
     }
@@ -123,7 +148,7 @@ function getPoolName(crontab)
     return "local";
 }
 
-function putControls(graph)
+function putControls(graph, routes)
 {
 
 
@@ -156,6 +181,32 @@ function putControls(graph)
                     if (graph.isEnabled())
                     {
                         runJob(state.cell.id);
+                        graph.selectCellForEvent(state.cell, evt);
+                        mxEvent.consume(evt);
+                    }
+                };
+            }
+        },
+        "viewLogControl" : {
+            "image": new mxImage('images/maximize.gif', 16, 16),
+            "condition" : function (graph, cell) {
+                let exist = false;
+                crontabs.forEach(function(crontab) {
+                    if (crontab._id==cell.id) {
+                        exist = true;
+                        return;
+                    }
+                });
+                return cell.style != mxConstants.SHAPE_SWIMLANE
+                    && graph.getModel().isVertex(cell)
+                    && exist;
+            },
+            "behavior": function (graph, state)
+            {
+                return function (evt) {
+                    if (graph.isEnabled())
+                    {
+                        window.open(routes.logger + '?id=' + state.cell.id)
                         graph.selectCellForEvent(state.cell, evt);
                         mxEvent.consume(evt);
                     }
@@ -271,6 +322,15 @@ function putStyle(graph)
     style[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#efefef';
 
     graph.getStylesheet().putCellStyle(mxConstants.SHAPE_SWIMLANE, style);
+
+    var style = [];
+    style[mxConstants.STYLE_FILLCOLOR] = '#ED4337';
+    graph.getStylesheet().putCellStyle('returncode', style);
+
+               
+    style = graph.getStylesheet().getDefaultEdgeStyle();                     
+    style[mxConstants.STYLE_CURVED] = '1';                                   
+    style[mxConstants.STYLE_EDGE] = mxEdgeStyle.SegmentConnector;   
 }
 
 function selectCorrepondingRow(cell) {
@@ -368,15 +428,31 @@ function putEvent(graph)
 
 function applyFilter(graph, crontabs) {
     var hash = window.location.hash;
+    var parents = new Set();
     crontabs.forEach(function(crontab) {
         let visible = true;
         if (typeof(hash) != "undefined" && hash.length>0 && "#" + crontab.project != hash) {
             visible = false;
         }
         let cell = graph.getModel().getCell(crontab._id);
+        if (typeof(cell) == "undefined")
+            return;
         graph.toggleCells(visible, [cell], true);
-        graph.toggleCells(graph.getChildVertices(cell.parent).length, [cell.parent], true);
+        parents.add(cell.parent);
+        
     });
+    parents.forEach(function(parent){
+        graph.toggleCells(graph.getChildVertices(parent).length, [parent], true);
+    })
+    crontabs.forEach(function(crontab) {
+        let cell = graph.getModel().getCell(crontab._id);
+        if (typeof(cell) == "undefined")
+            return;
+        graph.getModel().getEdges(cell).forEach(function(edge) {
+            edge.setVisible(edge.target.visible && edge.source.visible);
+        });
+    });
+    graph.refresh();
 }
 function putFilter(graph, crontabs) {
     $(window).on('hashchange', function(){
